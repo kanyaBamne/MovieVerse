@@ -7,15 +7,45 @@ function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        console.log("Login:", {
-            email,
-            password,
-        });
+        try {
+            const response = await fetch(
+                "http://localhost:5000/login",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                    }),
+                }
+            );
 
-        navigate("/admin");
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.message || "Login failed");
+                return;
+            }
+
+            console.log("Login successful:", data.admin);
+
+            // Save logged-in admin information
+            localStorage.setItem(
+                "admin",
+                JSON.stringify(data.admin)
+            );
+
+            navigate("/admin");
+
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("Unable to connect to the server.");
+        }
     };
 
     return (

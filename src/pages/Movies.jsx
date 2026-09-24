@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
 
@@ -10,102 +10,172 @@ function Movies() {
     const [year, setYear] = useState("");
     const [movieToDelete, setMovieToDelete] = useState(null);
 
-    const movies = [
-        {
-            id: 1,
-            title: "Interstellar",
-            director: "Christopher Nolan",
-            year: 2014,
-            genre: "Sci-Fi",
-            rating: "8.7",
-        },
-        {
-            id: 2,
-            title: "Parasite",
-            director: "Bong Joon Ho",
-            year: 2019,
-            genre: "Drama",
-            rating: "8.5",
-        },
-        {
-            id: 3,
-            title: "Inception",
-            director: "Christopher Nolan",
-            year: 2010,
-            genre: "Sci-Fi",
-            rating: "8.8",
-        },
-        {
-            id: 4,
-            title: "The Dark Knight",
-            director: "Christopher Nolan",
-            year: 2008,
-            genre: "Action",
-            rating: "9.0",
-        },
-        {
-            id: 5,
-            title: "Whiplash",
-            director: "Damien Chazelle",
-            year: 2014,
-            genre: "Drama",
-            rating: "8.5",
-        },
-        {
-            id: 6,
-            title: "La La Land",
-            director: "Damien Chazelle",
-            year: 2016,
-            genre: "Musical",
-            rating: "8.0",
-        },
-        {
-            id: 7,
-            title: "The Godfather",
-            director: "Francis Ford Coppola",
-            year: 1972,
-            genre: "Crime",
-            rating: "9.2",
-        },
-        {
-            id: 8,
-            title: "Spirited Away",
-            director: "Hayao Miyazaki",
-            year: 2001,
-            genre: "Animation",
-            rating: "8.6",
-        },
-        {
-            id: 9,
-            title: "The Shawshank Redemption",
-            director: "Frank Darabont",
-            year: 1994,
-            genre: "Drama",
-            rating: "9.3",
-        },
-        {
-            id: 10,
-            title: "Get Out",
-            director: "Jordan Peele",
-            year: 2017,
-            genre: "Horror",
-            rating: "7.8",
-        },
-    ];
+    // Movies from MongoDB
+    const [movies, setMovies] = useState([]);
 
-    const filteredMovies = movies.filter((movie) => {
-        const matchesSearch =
-            movie.title.toLowerCase().includes(search.toLowerCase()) ||
-            movie.director.toLowerCase().includes(search.toLowerCase());
+    // Loading and error states
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-        const matchesGenre =
-            genre === "" || movie.genre === genre;
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalMovies, setTotalMovies] = useState(0);
 
-        const matchesYear =
-            year === "" || movie.year.toString() === year;
+    const moviesPerPage = 10;
 
-        return matchesSearch && matchesGenre && matchesYear;
-    });
+   
+   // ==========================================
+// FETCH MOVIES FROM BACKEND
+// ==========================================
+
+    const fetchMovies = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: moviesPerPage,
+                search: search,
+                genre: genre,
+                year: year,
+            });
+
+            const response = await fetch(
+                `http://localhost:5000/movies?${params.toString()}`
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch movies");
+            }
+
+            const data = await response.json();
+
+            setMovies(data.movies || []);
+            setTotalPages(data.pagination?.totalPages || 1);
+            setTotalMovies(data.pagination?.totalMovies || 0);
+
+        } catch (err) {
+            console.error("Movies error:", err);
+            setError("Unable to load movies.");
+            setMovies([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ==========================================
+// DELETE MOVIE
+// ==========================================
+
+const handleDelete = async () => {
+    if (!movieToDelete) return;
+
+    try {
+        setError("");
+
+        const response = await fetch(
+            `http://localhost:5000/movies/${movieToDelete.id}`,
+            {
+                method: "DELETE",
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || "Failed to delete movie"
+            );
+        }
+
+        console.log("Movie deleted:", data);
+
+        // Close confirmation modal
+        setMovieToDelete(null);
+
+        // Reload movies from MongoDB
+        fetchMovies();
+
+    } catch (err) {
+        console.error("Delete movie error:", err);
+
+        setError(
+            err.message || "Failed to delete movie."
+        );
+    }
+};
+
+// ==========================================
+// LOAD MOVIES WHEN FILTERS/PAGE CHANGE
+// ==========================================
+
+    useEffect(() => {
+        fetchMovies();
+    }, [currentPage, search, genre, year]);
+
+
+    // Search
+    const handleSearchChange = (e) => {
+        setSearch(e.target.value);
+        setCurrentPage(1);
+    };
+
+
+    // Genre filter
+    const handleGenreChange = (e) => {
+        setGenre(e.target.value);
+        setCurrentPage(1);
+    };
+
+
+    // Year filter
+    const handleYearChange = (e) => {
+        setYear(e.target.value);
+        setCurrentPage(1);
+    };
+
+
+    // Pagination
+    const handlePageChange = (page) => {
+        if (page < 1 || page > totalPages) {
+            return;
+        }
+
+        setCurrentPage(page);
+    };
+
+
+    // Generate page numbers
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisiblePages = 5;
+
+        let startPage = Math.max(
+            1,
+            currentPage - Math.floor(maxVisiblePages / 2)
+        );
+
+        let endPage = Math.min(
+            totalPages,
+            startPage + maxVisiblePages - 1
+        );
+
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(
+                1,
+                endPage - maxVisiblePages + 1
+            );
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+
+        return pages;
+    };
+
 
     return (
         <div className="movies-page">
@@ -138,14 +208,14 @@ function Movies() {
                         type="text"
                         placeholder="Search movies..."
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={handleSearchChange}
                     />
                 </div>
 
 
                 <select
                     value={genre}
-                    onChange={(e) => setGenre(e.target.value)}
+                    onChange={handleGenreChange}
                 >
                     <option value="">All Genres</option>
                     <option value="Action">Action</option>
@@ -160,9 +230,11 @@ function Movies() {
 
                 <select
                     value={year}
-                    onChange={(e) => setYear(e.target.value)}
+                    onChange={handleYearChange}
                 >
                     <option value="">All Years</option>
+                    <option value="2026">2026</option> 
+                    <option value="2025">2025</option>
                     <option value="2024">2024</option>
                     <option value="2023">2023</option>
                     <option value="2022">2022</option>
@@ -172,7 +244,6 @@ function Movies() {
                     <option value="2018">2018</option>
                     <option value="2017">2017</option>
                     <option value="2016">2016</option>
-                    <option value="2014">2014</option>
                     <option value="2010">2010</option>
                     <option value="2008">2008</option>
                     <option value="2001">2001</option>
@@ -181,6 +252,14 @@ function Movies() {
                 </select>
 
             </div>
+
+
+            {/* Error */}
+            {error && (
+                <div className="dashboard-error">
+                    {error}
+                </div>
+            )}
 
 
             {/* Movie Table */}
@@ -204,14 +283,44 @@ function Movies() {
 
                         <tbody>
 
-                            {filteredMovies.length > 0 ? (
-                                filteredMovies.map((movie) => (
+                            {loading ? (
+
+                                <tr>
+                                    <td colSpan="6">
+
+                                        <div className="empty-state">
+                                            <span>🎬</span>
+                                            <h3>Loading movies...</h3>
+                                            <p>
+                                                Fetching movies from the database.
+                                            </p>
+                                        </div>
+
+                                    </td>
+                                </tr>
+
+                            ) : movies.length > 0 ? (
+
+                                movies.map((movie) => (
 
                                     <tr key={movie.id}>
 
                                         <td>
                                             <div className="table-poster">
-                                                🎬
+
+                                                {movie.poster ? (
+                                                    <img
+                                                        src={movie.poster}
+                                                        alt={movie.title}
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display = "none";
+                                                            e.currentTarget.parentElement.innerHTML = "🎬";
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    "🎬"
+                                                )}
+
                                             </div>
                                         </td>
 
@@ -248,7 +357,9 @@ function Movies() {
                                                 <button
                                                     className="edit-button"
                                                     onClick={() =>
-                                                        navigate(`/admin/movies/edit/${movie.id}`)
+                                                        navigate(
+                                                            `/admin/movies/edit/${movie.id}`
+                                                        )
                                                     }
                                                 >
                                                     Edit
@@ -256,10 +367,13 @@ function Movies() {
 
                                                 <button
                                                     className="delete-button"
-                                                    onClick={() => setMovieToDelete(movie)}
+                                                    onClick={() =>
+                                                        setMovieToDelete(movie)
+                                                    }
                                                 >
                                                     Delete
                                                 </button>
+
                                             </div>
 
                                         </td>
@@ -267,6 +381,7 @@ function Movies() {
                                     </tr>
 
                                 ))
+
                             ) : (
 
                                 <tr>
@@ -296,40 +411,76 @@ function Movies() {
                 <div className="pagination">
 
                     <span>
-                        Showing {filteredMovies.length > 0 ? 1 : 0}–
-                        {filteredMovies.length} of 5,000 movies
+                        {totalMovies > 0
+                            ? `Showing ${(currentPage - 1) * moviesPerPage + 1}–${Math.min(
+                                currentPage * moviesPerPage,
+                                totalMovies
+                            )} of ${totalMovies} movies`
+                            : "Showing 0 movies"}
                     </span>
+
 
                     <div className="pagination-buttons">
 
-                        <button>←</button>
-                        <button className="active-page">1</button>
-                        <button>2</button>
-                        <button>3</button>
-                        <button>4</button>
-                        <button>5</button>
-                        <button>→</button>
+                        {/* Previous */}
+                        <button
+                            onClick={() =>
+                                handlePageChange(currentPage - 1)
+                            }
+                            disabled={currentPage === 1}
+                        >
+                            ←
+                        </button>
+
+
+                        {/* Page Numbers */}
+                        {getPageNumbers().map((page) => (
+
+                            <button
+                                key={page}
+                                className={
+                                    currentPage === page
+                                        ? "active-page"
+                                        : ""
+                                }
+                                onClick={() =>
+                                    handlePageChange(page)
+                                }
+                            >
+                                {page}
+                            </button>
+
+                        ))}
+
+
+                        {/* Next */}
+                        <button
+                            onClick={() =>
+                                handlePageChange(currentPage + 1)
+                            }
+                            disabled={currentPage === totalPages}
+                        >
+                            →
+                        </button>
 
                     </div>
 
                 </div>
 
             </div>
+
+
+            {/* Delete Confirmation */}
             {movieToDelete && (
-  <ConfirmModal
-       title="Delete Movie?"
-    itemName={movieToDelete.title}
-    onCancel={() => setMovieToDelete(null)}
-    onConfirm={() => {
-      console.log("Deleting movie:", movieToDelete);
-      setMovieToDelete(null);
-    }}
-  />
-)}
+                <ConfirmModal
+                    title="Delete Movie?"
+                    itemName={movieToDelete.title}
+                    onCancel={() => setMovieToDelete(null)}
+                    onConfirm={handleDelete}
+                />
+            )}
 
         </div>
-
-        
     );
 }
 

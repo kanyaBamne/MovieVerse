@@ -1,76 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ConfirmModal from "../components/ConfirmModal";
 
 function Users() {
     const [search, setSearch] = useState("");
     const [userToDelete, setUserToDelete] = useState(null);
+    const [selectedUser, setSelectedUser] = useState(null);
 
-    const users = [
-        {
-            id: 1,
-            username: "alex_23",
-            name: "Alex",
-            email: "alex23@email.com",
-            joined: "Sep 9, 2026",
-            status: "Active",
-        },
-        {
-            id: 2,
-            username: "moviebuff99",
-            name: "Movie Buff",
-            email: "moviebuff99@email.com",
-            joined: "Sep 8, 2026",
-            status: "Active",
-        },
-        {
-            id: 3,
-            username: "sara_movies",
-            name: "Sara",
-            email: "sara_movies@email.com",
-            joined: "Sep 7, 2026",
-            status: "Active",
-        },
-        {
-            id: 4,
-            username: "cinephile",
-            name: "Cinephile",
-            email: "cinephile@email.com",
-            joined: "Sep 6, 2026",
-            status: "Inactive",
-        },
-        {
-            id: 5,
-            username: "john_doe",
-            name: "John Doe",
-            email: "john@email.com",
-            joined: "Sep 5, 2026",
-            status: "Active",
-        },
-        {
-            id: 6,
-            username: "filmfan",
-            name: "Film Fan",
-            email: "filmfan@email.com",
-            joined: "Sep 4, 2026",
-            status: "Active",
-        },
-        {
-            id: 7,
-            username: "screenqueen",
-            name: "Screen Queen",
-            email: "screenqueen@email.com",
-            joined: "Sep 3, 2026",
-            status: "Active",
-        },
-        {
-            id: 8,
-            username: "reeladdict",
-            name: "Reel Addict",
-            email: "reeladdict@email.com",
-            joined: "Sep 2, 2026",
-            status: "Inactive",
-        },
-    ];
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+    const fetchUsers = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await fetch(
+                "http://localhost:5000/users"
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch users");
+            }
+
+            const data = await response.json();
+
+            setUsers(data.users || []);
+        } catch (err) {
+            console.error("Users error:", err);
+            setError("Unable to load users.");
+            setUsers([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchUsers();
+    }, []);
 
     const filteredUsers = users.filter((user) => {
         const searchValue = search.toLowerCase();
@@ -81,6 +48,38 @@ function Users() {
             user.name.toLowerCase().includes(searchValue)
         );
     });
+
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return;
+
+        try {
+            const response = await fetch(
+                `http://localhost:5000/users/${userToDelete.id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || "Failed to delete user");
+            }
+
+            // Remove the deleted user from the table
+            setUsers((currentUsers) =>
+                currentUsers.filter(
+                    (user) => user.id !== userToDelete.id
+                )
+            );
+
+            setUserToDelete(null);
+
+        } catch (error) {
+            console.error("Delete user error:", error);
+            alert("Failed to delete user.");
+        }
+    };
 
     return (
         <div className="users-page">
@@ -132,7 +131,39 @@ function Users() {
 
                         <tbody>
 
-                            {filteredUsers.length > 0 ? (
+                        {loading ? (
+
+                            <tr>
+                                <td colSpan="5">
+                                    <div className="empty-state">
+                                        <span>⏳</span>
+
+                                        <h3>Loading users...</h3>
+
+                                        <p>
+                                            Fetching users from the database.
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        ) : error ? (
+
+                            <tr>
+                                <td colSpan="5">
+                                    <div className="empty-state">
+                                        <span>⚠️</span>
+
+                                        <h3>Unable to load users</h3>
+
+                                        <p>
+                                            {error}
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+
+                        ) : filteredUsers.length > 0 ? (
 
                                 filteredUsers.map((user) => (
 
@@ -197,12 +228,7 @@ function Users() {
 
                                                 <button
                                                     className="view-user-button"
-                                                    onClick={() =>
-                                                        console.log(
-                                                            "Viewing user:",
-                                                            user
-                                                        )
-                                                    }
+                                                    onClick={() => setSelectedUser(user)}
                                                 >
                                                     View
                                                 </button>
@@ -259,7 +285,7 @@ function Users() {
 
                     <span>
                         Showing {filteredUsers.length > 0 ? 1 : 0}–
-                        {filteredUsers.length} of 1,284 users
+                        {filteredUsers.length} of {users.length} users
                     </span>
 
                     <div className="pagination-buttons">
@@ -283,6 +309,82 @@ function Users() {
 
             </div>
 
+            {/* View User Modal */}
+
+            {selectedUser && (
+                <div className="modal-overlay">
+                    <div className="user-view-modal">
+
+                        <div className="user-view-header">
+                            <div>
+                                <h2>User Details</h2>
+                                <p>View registered user information.</p>
+                            </div>
+
+                            <button
+                                className="modal-close-button"
+                                onClick={() => setSelectedUser(null)}
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="user-view-content">
+
+                            <div className="user-view-avatar">
+                                👤
+                            </div>
+
+                            <div className="user-view-info">
+
+                                <div className="user-detail">
+                                    <span>Username</span>
+                                    <strong>{selectedUser.username}</strong>
+                                </div>
+
+                                <div className="user-detail">
+                                    <span>Name</span>
+                                    <strong>{selectedUser.name}</strong>
+                                </div>
+
+                                <div className="user-detail">
+                                    <span>Email</span>
+                                    <strong>{selectedUser.email}</strong>
+                                </div>
+
+                                <div className="user-detail">
+                                    <span>Status</span>
+                                    <strong className="user-status">
+                                        {selectedUser.status}
+                                    </strong>
+                                </div>
+
+                                <div className="user-detail">
+                                    <span>Joined</span>
+                                    <strong>
+                                        {new Date(
+                                            selectedUser.joined
+                                        ).toLocaleDateString()}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div className="user-view-footer">
+                            <button
+                                className="close-user-button"
+                                onClick={() => setSelectedUser(null)}
+                            >
+                                Close
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
 
             {/* Delete Modal */}
 
@@ -292,14 +394,7 @@ function Users() {
                     title="Delete User?"
                     itemName={userToDelete.username}
                     onCancel={() => setUserToDelete(null)}
-                    onConfirm={() => {
-                        console.log(
-                            "Deleting user:",
-                            userToDelete
-                        );
-
-                        setUserToDelete(null);
-                    }}
+                    onConfirm={handleDeleteUser}
                 />
 
             )}
