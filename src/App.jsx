@@ -8,6 +8,8 @@ import AddMovie from "./pages/AddMovie";
 import EditMovie from "./pages/EditMovie";
 import Users from "./pages/Users";
 import Login from "./pages/Login";
+import Home from "./pages/Home";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -33,9 +35,12 @@ function App() {
           }
         />
 
-        {/* Open project → Login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+         <Route
+                    path="/"
+                    element={<Home />}
+                />
 
+        <Route path="/profile"element={<Profile />}/>
         {/* Unknown URL → Login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
 
