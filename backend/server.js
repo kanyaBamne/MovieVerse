@@ -583,12 +583,21 @@ app.get("/users", async (req, res) => {
 
         const formattedUsers = users.map((user) => ({
             id: user._id.toString(),
+
             username: user.username || "",
-            name: user.name || "",
             email: user.email || "",
-            joined: user.createdAt || "",
-            status: user.status || "active",
+            name: user.name || "",
+
             profileImage: user.profileImage || "",
+            bio: user.bio || "",
+
+            role: user.role || "user",
+            status: user.status || "active",
+
+            createdAt: user.createdAt || "",
+            updatedAt: user.updatedAt || "",
+
+            joined: user.createdAt || "",
         }));
 
         res.json({

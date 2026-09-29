@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import ConfirmModal from "../components/ConfirmModal";
 
 function Users() {
     const [search, setSearch] = useState("");
-    const [userToDelete, setUserToDelete] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
 
     const [users, setUsers] = useState([]);
@@ -11,74 +9,69 @@ function Users() {
     const [error, setError] = useState("");
 
     useEffect(() => {
-    const fetchUsers = async () => {
-        try {
-            setLoading(true);
-            setError("");
+        const fetchUsers = async () => {
+            try {
+                setLoading(true);
+                setError("");
 
-            const response = await fetch(
-                "http://localhost:5000/users"
-            );
+                const response = await fetch(
+                    "http://localhost:5000/users"
+                );
 
-            if (!response.ok) {
-                throw new Error("Failed to fetch users");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch users");
+                }
+
+                const data = await response.json();
+
+                setUsers(data.users || []);
+            } catch (err) {
+                console.error("Users error:", err);
+                setError("Unable to load users.");
+                setUsers([]);
+            } finally {
+                setLoading(false);
             }
+        };
 
-            const data = await response.json();
-
-            setUsers(data.users || []);
-        } catch (err) {
-            console.error("Users error:", err);
-            setError("Unable to load users.");
-            setUsers([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    fetchUsers();
+        fetchUsers();
     }, []);
 
     const filteredUsers = users.filter((user) => {
         const searchValue = search.toLowerCase();
 
         return (
-            user.username.toLowerCase().includes(searchValue) ||
-            user.email.toLowerCase().includes(searchValue) ||
-            user.name.toLowerCase().includes(searchValue)
+            (user.username || "")
+                .toLowerCase()
+                .includes(searchValue) ||
+            (user.email || "")
+                .toLowerCase()
+                .includes(searchValue) ||
+            (user.name || "")
+                .toLowerCase()
+                .includes(searchValue)
         );
     });
 
-    const handleDeleteUser = async () => {
-        if (!userToDelete) return;
+    // Convert database field names into readable names
+    const formatFieldName = (key) => {
+        return key
+            .replace(/([A-Z])/g, " $1")
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (char) => char.toUpperCase());
+    };
 
-        try {
-            const response = await fetch(
-                `http://localhost:5000/users/${userToDelete.id}`,
-                {
-                    method: "DELETE",
-                }
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || "Failed to delete user");
-            }
-
-            // Remove the deleted user from the table
-            setUsers((currentUsers) =>
-                currentUsers.filter(
-                    (user) => user.id !== userToDelete.id
-                )
-            );
-
-            setUserToDelete(null);
-
-        } catch (error) {
-            console.error("Delete user error:", error);
-            alert("Failed to delete user.");
+    // Format values for displaying
+    const formatValue = (value) => {
+        if (value === null || value === undefined || value === "") {
+            return "-";
         }
+
+        if (typeof value === "object") {
+            return JSON.stringify(value, null, 2);
+        }
+
+        return String(value);
     };
 
     return (
@@ -131,39 +124,37 @@ function Users() {
 
                         <tbody>
 
-                        {loading ? (
+                            {loading ? (
 
-                            <tr>
-                                <td colSpan="5">
-                                    <div className="empty-state">
-                                        <span>⏳</span>
+                                <tr>
+                                    <td colSpan="5">
+                                        <div className="empty-state">
+                                            <span>⏳</span>
 
-                                        <h3>Loading users...</h3>
+                                            <h3>Loading users...</h3>
 
-                                        <p>
-                                            Fetching users from the database.
-                                        </p>
-                                    </div>
-                                </td>
-                            </tr>
+                                            <p>
+                                                Fetching users from the database.
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
 
-                        ) : error ? (
+                            ) : error ? (
 
-                            <tr>
-                                <td colSpan="5">
-                                    <div className="empty-state">
-                                        <span>⚠️</span>
+                                <tr>
+                                    <td colSpan="5">
+                                        <div className="empty-state">
+                                            <span>⚠️</span>
 
-                                        <h3>Unable to load users</h3>
+                                            <h3>Unable to load users</h3>
 
-                                        <p>
-                                            {error}
-                                        </p>
-                                    </div>
-                                </td>
-                            </tr>
+                                            <p>{error}</p>
+                                        </div>
+                                    </td>
+                                </tr>
 
-                        ) : filteredUsers.length > 0 ? (
+                            ) : filteredUsers.length > 0 ? (
 
                                 filteredUsers.map((user) => (
 
@@ -180,11 +171,11 @@ function Users() {
 
                                                 <div>
                                                     <strong>
-                                                        {user.username}
+                                                        {user.username || "-"}
                                                     </strong>
 
                                                     <span>
-                                                        {user.name}
+                                                        {user.name || "-"}
                                                     </span>
                                                 </div>
 
@@ -195,14 +186,14 @@ function Users() {
                                         {/* Email */}
 
                                         <td>
-                                            {user.email}
+                                            {user.email || "-"}
                                         </td>
 
 
                                         {/* Joined */}
 
                                         <td>
-                                            {user.joined}
+                                            {user.joined || user.createdAt || "-"}
                                         </td>
 
 
@@ -211,10 +202,11 @@ function Users() {
                                         <td>
 
                                             <span
-                                                className={`status-badge ${user.status.toLowerCase()
-                                                    }`}
+                                                className={`status-badge ${(
+                                                    user.status || "active"
+                                                ).toLowerCase()}`}
                                             >
-                                                {user.status}
+                                                {user.status || "active"}
                                             </span>
 
                                         </td>
@@ -228,18 +220,11 @@ function Users() {
 
                                                 <button
                                                     className="view-user-button"
-                                                    onClick={() => setSelectedUser(user)}
-                                                >
-                                                    View
-                                                </button>
-
-                                                <button
-                                                    className="delete-user-button"
                                                     onClick={() =>
-                                                        setUserToDelete(user)
+                                                        setSelectedUser(user)
                                                     }
                                                 >
-                                                    Delete
+                                                    View
                                                 </button>
 
                                             </div>
@@ -309,16 +294,24 @@ function Users() {
 
             </div>
 
+
             {/* View User Modal */}
 
             {selectedUser && (
                 <div className="modal-overlay">
+
                     <div className="user-view-modal">
 
+                        {/* Header */}
+
                         <div className="user-view-header">
+
                             <div>
                                 <h2>User Details</h2>
-                                <p>View registered user information.</p>
+
+                                <p>
+                                    Complete information about this user.
+                                </p>
                             </div>
 
                             <button
@@ -327,78 +320,113 @@ function Users() {
                             >
                                 ×
                             </button>
+
                         </div>
+
+
+                        {/* User Details */}
 
                         <div className="user-view-content">
 
                             <div className="user-view-avatar">
-                                👤
+
+                                {selectedUser.profileImage ? (
+                                    <img
+                                        src={selectedUser.profileImage}
+                                        alt={selectedUser.name}
+                                    />
+                                ) : (
+                                    "👤"
+                                )}
+
                             </div>
+
 
                             <div className="user-view-info">
 
                                 <div className="user-detail">
+                                    <span>User ID</span>
+                                    <strong>{selectedUser.id}</strong>
+                                </div>
+
+                                <div className="user-detail">
                                     <span>Username</span>
-                                    <strong>{selectedUser.username}</strong>
+                                    <strong>{selectedUser.username || "-"}</strong>
                                 </div>
 
                                 <div className="user-detail">
                                     <span>Name</span>
-                                    <strong>{selectedUser.name}</strong>
+                                    <strong>{selectedUser.name || "-"}</strong>
                                 </div>
 
                                 <div className="user-detail">
                                     <span>Email</span>
-                                    <strong>{selectedUser.email}</strong>
+                                    <strong>{selectedUser.email || "-"}</strong>
+                                </div>
+
+                                <div className="user-detail">
+                                    <span>Bio</span>
+                                    <strong>{selectedUser.bio || "-"}</strong>
+                                </div>
+
+                                <div className="user-detail">
+                                    <span>Role</span>
+                                    <strong>{selectedUser.role || "-"}</strong>
                                 </div>
 
                                 <div className="user-detail">
                                     <span>Status</span>
                                     <strong className="user-status">
-                                        {selectedUser.status}
+                                        {selectedUser.status || "-"}
                                     </strong>
                                 </div>
 
                                 <div className="user-detail">
                                     <span>Joined</span>
                                     <strong>
-                                        {new Date(
-                                            selectedUser.joined
-                                        ).toLocaleDateString()}
+                                        {selectedUser.createdAt
+                                            ? new Date(
+                                                selectedUser.createdAt
+                                            ).toLocaleString()
+                                            : "-"}
                                     </strong>
                                 </div>
+
+                                <div className="user-detail">
+                                    <span>Last Updated</span>
+                                    <strong>
+                                        {selectedUser.updatedAt
+                                            ? new Date(
+                                                selectedUser.updatedAt
+                                            ).toLocaleString()
+                                            : "-"}
+                                    </strong>
+                                </div>
+
+                                
 
                             </div>
 
                         </div>
 
+
+                        {/* Footer */}
+
                         <div className="user-view-footer">
+
                             <button
                                 className="close-user-button"
                                 onClick={() => setSelectedUser(null)}
                             >
                                 Close
                             </button>
+
                         </div>
 
                     </div>
+
                 </div>
             )}
-
-
-            {/* Delete Modal */}
-
-            {userToDelete && (
-
-                <ConfirmModal
-                    title="Delete User?"
-                    itemName={userToDelete.username}
-                    onCancel={() => setUserToDelete(null)}
-                    onConfirm={handleDeleteUser}
-                />
-
-            )}
-
         </div>
     );
 }
