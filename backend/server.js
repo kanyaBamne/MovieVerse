@@ -568,6 +568,525 @@ app.delete("/movies/:id", async (req, res) => {
 });
 
 // ==================================================
+// GET LATEST REVIEWS
+// ==================================================
+
+app.get("/reviews/latest", async (req, res) => {
+    try {
+
+        const db = mongoose.connection.db;
+
+        // Get latest reviews from MongoDB
+        const reviews = await db
+            .collection("reviews")
+            .aggregate([
+
+                // Get user information
+                {
+                    $lookup: {
+                        from: "user",
+                        localField: "userId",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+
+                // Get movie information
+                {
+                    $lookup: {
+                        from: "movie",
+                        localField: "movieId",
+                        foreignField: "_id",
+                        as: "movie"
+                    }
+                },
+
+                // Latest reviews first
+                {
+                    $sort: {
+                        createdAt: -1
+                    }
+                },
+
+                // Only get latest 10 reviews
+                {
+                    $limit: 10
+                }
+
+            ])
+            .toArray();
+
+
+        // Convert MongoDB data into frontend-friendly data
+        const formattedReviews = reviews.map((review) => {
+
+            const user = review.user[0] || {};
+            const movie = review.movie[0] || {};
+
+            return {
+
+                id: review._id.toString(),
+
+                reviewTitle: review.reviewTitle || "",
+
+                reviewText: review.reviewText || "",
+
+                rating: review.rating || 0,
+
+                likesCount: review.likesCount || 0,
+
+                createdAt: review.createdAt || "",
+
+
+                // User information
+                user: {
+                    id: user._id
+                        ? user._id.toString()
+                        : "",
+
+                    username: user.username || "",
+
+                    name: user.name || "",
+
+                    profileImage: user.profileImage || ""
+                },
+
+
+                // Movie information
+                movie: {
+                    id: movie._id
+                        ? movie._id.toString()
+                        : "",
+
+                    title: movie.Title || "",
+
+                    poster: movie.Poster || ""
+                }
+
+            };
+
+        });
+
+
+        res.json({
+            success: true,
+            reviews: formattedReviews
+        });
+
+
+    } catch (error) {
+
+        console.error("Latest reviews error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to load latest reviews"
+        });
+
+    }
+});
+// ==================================================
+// GET TOP LISTS
+// ==================================================
+
+app.get("/userlists/top", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        // Get top lists
+        const lists = await db
+            .collection("userlist")
+            .aggregate([
+
+                // Get user information
+                {
+                    $lookup: {
+                        from: "user",
+                        localField: "userId",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+
+                // Get movie information
+                {
+                    $lookup: {
+                        from: "movie",
+                        localField: "movieIds",
+                        foreignField: "_id",
+                        as: "movies"
+                    }
+                },
+
+                // Most liked lists first
+                {
+                    $sort: {
+                        likesCount: -1
+                    }
+                },
+
+                // Get top 10 lists
+                {
+                    $limit: 10
+                }
+
+            ])
+            .toArray();
+
+
+        // Convert MongoDB data
+        // into frontend-friendly data
+
+        const formattedLists = lists.map((list) => {
+
+            const user = list.user[0] || {};
+
+            return {
+
+                id: list._id.toString(),
+
+                title: list.title || "",
+
+                description: list.description || "",
+
+                likesCount: list.likesCount || 0,
+
+                movieCount: list.movieIds
+                    ? list.movieIds.length
+                    : 0,
+
+                createdAt: list.createdAt || "",
+
+
+                // User
+                user: {
+
+                    id: user._id
+                        ? user._id.toString()
+                        : "",
+
+                    username: user.username || "",
+
+                    name: user.name || "",
+
+                    profileImage: user.profileImage || ""
+
+                },
+
+
+                // Movies
+                movies: list.movies.map((movie) => ({
+
+                    id: movie._id.toString(),
+
+                    title: movie.Title || "",
+
+                    poster: movie.Poster || ""
+
+                }))
+
+            };
+
+        });
+
+
+        res.json({
+
+            success: true,
+
+            lists: formattedLists
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Top lists error:",
+            error
+        );
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to load top lists"
+
+        });
+
+    }
+
+});
+
+// ==================================================
+// GET SINGLE USER PROFILE
+// ==================================================
+
+app.get("/profile/:id", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { id } = req.params;
+
+
+        // Find user by MongoDB ID
+
+        const user = await db.collection("user").findOne({
+
+            _id: new mongoose.Types.ObjectId(id)
+
+        });
+
+
+        // User not found
+
+        if (!user) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "User not found"
+
+            });
+
+        }
+
+
+        // Send only the information needed
+        // for the profile page
+
+        res.json({
+
+            success: true,
+
+            user: {
+
+                id: user._id.toString(),
+
+                username: user.username || "",
+
+                name: user.name || "",
+
+                profileImage: user.profileImage || "",
+
+                bio: user.bio || ""
+
+            }
+
+        });
+
+
+    } catch (error) {
+
+        console.error("Profile error:", error);
+
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to load profile"
+
+        });
+
+    }
+
+});
+
+// ==================================================
+// ADD MOVIE TO WATCHLIST
+// ==================================================
+
+app.post("/watchlist", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId, movieId } = req.body;
+
+
+        // Check required data
+
+        if (!userId || !movieId) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "userId and movieId are required"
+
+            });
+
+        }
+
+
+        // Check if movie is already in watchlist
+
+        const existingMovie = await db
+            .collection("watchlists")
+            .findOne({
+
+                userId: new mongoose.Types.ObjectId(userId),
+
+                movieId: new mongoose.Types.ObjectId(movieId)
+
+            });
+
+
+        if (existingMovie) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Movie is already in watchlist"
+
+            });
+
+        }
+
+
+        // Add movie
+
+        const result = await db
+            .collection("watchlists")
+            .insertOne({
+
+                userId: new mongoose.Types.ObjectId(userId),
+
+                movieId: new mongoose.Types.ObjectId(movieId),
+
+                addedAt: new Date()
+
+            });
+
+
+        res.json({
+
+            success: true,
+
+            message: "Movie added to watchlist",
+
+            watchlistId: result.insertedId
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Add watchlist error:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to add movie to watchlist"
+
+        });
+
+    }
+
+});
+// ==================================================
+// GET USER WATCHLIST
+// ==================================================
+
+app.get("/watchlist/:userId", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId } = req.params;
+
+
+        const watchlist = await db
+            .collection("watchlists")
+            .aggregate([
+
+                {
+                    $match: {
+
+                        userId:
+                            new mongoose.Types.ObjectId(userId)
+
+                    }
+
+                },
+
+                {
+                    $lookup: {
+
+                        from: "movie",
+
+                        localField: "movieId",
+
+                        foreignField: "_id",
+
+                        as: "movie"
+
+                    }
+
+                },
+
+                {
+                    $unwind: "$movie"
+
+                },
+
+                {
+                    $sort: {
+
+                        addedAt: -1
+
+                    }
+
+                }
+
+            ])
+            .toArray();
+
+
+        res.json({
+
+            success: true,
+
+            watchlist: watchlist
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Watchlist fetch error:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to fetch watchlist"
+
+        });
+
+    }
+
+});
+
+// ==================================================
 // GET USERS
 // ==================================================
 
