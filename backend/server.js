@@ -237,6 +237,7 @@ app.get("/movies", async (req, res) => {
     const movies = await db
       .collection("movie")
       .find(filter)
+      .sort({ _id: -1 })
       .skip(skip)
       .limit(limit)
       .toArray();
@@ -1171,6 +1172,94 @@ app.delete("/users/:id", async (req, res) => {
     }
 });
 
+app.post("/register", async (req, res) => {
+    try {
+        const db = mongoose.connection.db;
+
+        const {
+            name,
+            username,
+            email,
+            password,
+        } = req.body;
+
+        // Check required fields
+        if (!name || !username || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required",
+            });
+        }
+
+        // Check whether email already exists
+        const existingEmail = await db
+            .collection("user")
+            .findOne({ email });
+
+        if (existingEmail) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered",
+            });
+        }
+
+        // Check whether username already exists
+        const existingUsername = await db
+            .collection("user")
+            .findOne({ username });
+
+        if (existingUsername) {
+            return res.status(409).json({
+                success: false,
+                message: "Username already taken",
+            });
+        }
+
+        // Hash password
+        const bcrypt = require("bcrypt");
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create user
+        const newUser = {
+            name,
+            username,
+            email,
+            password: hashedPassword,
+            profileImage: "",
+            bio: "",
+            role: "user",
+            status: "active",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+
+        const result = await db
+            .collection("user")
+            .insertOne(newUser);
+
+        res.status(201).json({
+            success: true,
+            message: "Registration successful",
+            user: {
+                id: result.insertedId.toString(),
+                name,
+                username,
+                email,
+                role: "user",
+            },
+        });
+
+    } catch (error) {
+        console.error("Registration error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Registration failed",
+        });
+    }
+});
+
 // ==================================================
 // ADMIN LOGIN
 // ==================================================
@@ -1179,7 +1268,18 @@ app.post("/login", async (req, res) => {
     try {
         const db = mongoose.connection.db;
 
+        console.log("DATABASE NAME:", mongoose.connection.name);
+
+        const userCount = await db.collection("user").countDocuments();
+
+        console.log("USER COUNT:", userCount);
+
         const { email, password } = req.body;
+
+        console.log("========== LOGIN DEBUG ==========");
+        console.log("EMAIL RECEIVED =", JSON.stringify(email));
+        console.log("PASSWORD RECEIVED =", JSON.stringify(password));
+        console.log("=================================");
 
         if (!email || !password) {
             return res.status(400).json({
@@ -1188,49 +1288,376 @@ app.post("/login", async (req, res) => {
             });
         }
 
+        // =========================
+        // CHECK ADMIN
+        // =========================
+
         const admin = await db.collection("admin").findOne({
             email: email,
         });
 
-        if (!admin) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid email or password",
+        if (admin) {
+
+            // Admin passwords are stored as plain text
+            if (admin.password !== password) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid email or password",
+                });
+            }
+
+            if (admin.status !== "active") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Admin account is inactive",
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: "Login successful",
+
+                user: {
+                    id: admin._id.toString(),
+                    username: admin.username,
+                    name: admin.name,
+                    email: admin.email,
+                    role: "admin",
+                },
             });
         }
 
-        if (admin.password !== password) {
-            return res.status(401).json({
-                success: false,
-                message: "Invalid email or password",
+
+        // =========================
+        // CHECK NORMAL USER
+        // =========================
+
+        const user = await db.collection("user").findOne({
+            email: email,
+        });
+
+        const allUsers = await db
+            .collection("user")
+            .find({})
+            .project({ email: 1, username: 1 })
+            .toArray();
+
+        console.log("ALL USERS:", allUsers);
+
+        console.log("USER FOUND:", user ? user.email : "NO USER FOUND");
+                console.log(
+                    "USER FOUND:",
+                    user ? user.email : "NO USER FOUND"
+                );
+
+        if (user) {
+
+           const bcrypt = require("bcrypt");
+
+            const passwordMatch = await bcrypt.compare(
+                password,
+                user.password
+            );
+
+             console.log("PASSWORD MATCH:", passwordMatch);
+
+              if (!passwordMatch) {
+                  return res.status(401).json({
+                      success: false,
+                      message: "Invalid email or password",
+                  });
+              }
+
+            if (user.status !== "active") {
+                return res.status(403).json({
+                    success: false,
+                    message: "User account is inactive",
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: "Login successful",
+
+                user: {
+                    id: user._id.toString(),
+                    username: user.username,
+                    name: user.name,
+                    email: user.email,
+                    role: "user",
+                },
             });
         }
 
-        if (admin.status !== "active") {
-            return res.status(403).json({
-                success: false,
-                message: "Admin account is inactive",
-            });
-        }
 
-        res.json({
-            success: true,
-            message: "Login successful",
-            admin: {
-                id: admin._id.toString(),
-                username: admin.username,
-                name: admin.name,
-                email: admin.email,
-                role: admin.role,
-            },
+        // =========================
+        // EMAIL NOT FOUND
+        // =========================
+
+        return res.status(401).json({
+            success: false,
+            message: "Invalid email or password",
         });
 
     } catch (error) {
+
         console.error("Login error:", error);
 
         res.status(500).json({
             success: false,
             message: "Login failed",
+        });
+    }
+});
+
+// ===============================
+// TOP REVIEWS
+// ===============================
+
+app.get("/top-reviews", async (req, res) => {
+    try {
+        const db = mongoose.connection.db;
+
+        // =========================
+        // TOP REVIEWED MOVIES
+        // =========================
+
+        const topReviewedMovies = await db
+            .collection("reviews")
+            .aggregate([
+
+                // Count reviews for each movie
+                {
+                    $group: {
+                        _id: "$movieId",
+                        reviewCount: {
+                            $sum: 1
+                        },
+                        averageRating: {
+                            $avg: "$rating"
+                        }
+                    }
+                },
+
+                // Highest number of reviews first
+                {
+                    $sort: {
+                        reviewCount: -1
+                    }
+                },
+
+                // Show top 5 movies
+                {
+                    $limit: 5
+                },
+
+                // Get movie details
+                {
+                    $lookup: {
+                        from: "movie",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "movie"
+                    }
+                },
+
+                {
+                    $unwind: {
+                        path: "$movie",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+
+                // Get one actual review for this movie
+                {
+                    $lookup: {
+                        from: "reviews",
+                        let: {
+                            movieId: "$_id"
+                        },
+                        pipeline: [
+
+                            {
+                                $match: {
+                                    $expr: {
+                                        $eq: [
+                                            "$movieId",
+                                            "$$movieId"
+                                        ]
+                                    }
+                                }
+                            },
+
+                            // Latest review
+                            {
+                                $sort: {
+                                    createdAt: -1
+                                }
+                            },
+
+                            {
+                                $limit: 1
+                            },
+
+                            // Get reviewer information
+                            {
+                                $lookup: {
+                                    from: "user",
+                                    localField: "userId",
+                                    foreignField: "_id",
+                                    as: "user"
+                                }
+                            },
+
+                            {
+                                $unwind: {
+                                    path: "$user",
+                                    preserveNullAndEmptyArrays: true
+                                }
+                            },
+
+                            {
+                                $project: {
+                                    _id: 0,
+                                    reviewTitle: 1,
+                                    reviewText: 1,
+                                    rating: 1,
+                                    createdAt: 1,
+                                    userName: "$user.name",
+                                    username: "$user.username",
+                                    profileImage: "$user.profileImage"
+                                }
+                            }
+
+                        ],
+                        as: "latestReview"
+                    }
+                },
+
+                {
+                    $unwind: {
+                        path: "$latestReview",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+
+                // Final data sent to React
+                {
+                    $project: {
+                        _id: 0,
+
+                        movieId: "$_id",
+
+                        title: "$movie.Title",
+
+                        genre: "$movie.Genre",
+
+                        poster: "$movie.poster",
+
+                        reviewCount: 1,
+
+                        averageRating: {
+                            $round: [
+                                "$averageRating",
+                                1
+                            ]
+                        },
+
+                        review: "$latestReview"
+                    }
+                }
+
+            ])
+            .toArray();
+
+
+        // =========================
+        // POPULAR REVIEWERS
+        // =========================
+
+        const popularReviewers = await db
+            .collection("reviews")
+            .aggregate([
+
+                // Count reviews written by each user
+                {
+                    $group: {
+                        _id: "$userId",
+                        reviewCount: {
+                            $sum: 1
+                        }
+                    }
+                },
+
+                // Most reviews first
+                {
+                    $sort: {
+                        reviewCount: -1
+                    }
+                },
+
+                // Show top 5 reviewers
+                {
+                    $limit: 5
+                },
+
+                // Get user details
+                {
+                    $lookup: {
+                        from: "user",
+                        localField: "_id",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+
+                {
+                    $unwind: {
+                        path: "$user",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+
+                {
+                    $project: {
+                        _id: 0,
+
+                        userId: "$_id",
+
+                        name: "$user.name",
+
+                        username: "$user.username",
+
+                        profileImage: "$user.profileImage",
+
+                        reviewCount: 1
+                    }
+                }
+
+            ])
+            .toArray();
+
+
+        // =========================
+        // RESPONSE
+        // =========================
+
+        res.json({
+            success: true,
+            topReviewedMovies,
+            popularReviewers
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Top reviews error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to load top reviews"
         });
     }
 });

@@ -32,18 +32,33 @@ function Login() {
                 return;
             }
 
-            console.log("Login successful:", data.admin);
+            console.log("Login successful:", data.user);
 
-            // Save logged-in admin information
+            // Save logged-in user/admin information
             localStorage.setItem(
-                "admin",
-                JSON.stringify(data.admin)
+                "user",
+                JSON.stringify(data.user)
             );
 
-            navigate("/admin");
+            // Check the role returned by the backend
+            if (data.user.role === "admin") {
+
+                localStorage.setItem(
+                    "admin",
+                    JSON.stringify(data.user)
+                );
+
+                navigate("/admin");
+
+            } else if (data.user.role === "user") {
+
+                navigate("/");
+
+            }
 
         } catch (error) {
             console.error("Login error:", error);
+
             alert("Unable to connect to the server.");
         }
     };
@@ -60,12 +75,13 @@ function Login() {
                 <h1>MovieVerse</h1>
 
                 <p className="login-subtitle">
-                    Admin Panel
+                    Sign In
                 </p>
 
                 <form onSubmit={handleSubmit}>
 
                     <div className="form-group">
+
                         <label htmlFor="email">
                             Email
                         </label>
@@ -73,16 +89,18 @@ function Login() {
                         <input
                             type="email"
                             id="email"
-                            placeholder="admin@example.com"
+                            placeholder="Enter your email"
                             value={email}
                             onChange={(e) =>
                                 setEmail(e.target.value)
                             }
                             required
                         />
+
                     </div>
 
                     <div className="form-group">
+
                         <label htmlFor="password">
                             Password
                         </label>
@@ -97,13 +115,14 @@ function Login() {
                             }
                             required
                         />
+
                     </div>
 
                     <button
                         type="submit"
                         className="login-button"
                     >
-                        Login
+                        Sign In
                     </button>
 
                 </form>

@@ -1,16 +1,33 @@
 import LatestReviews from "./LatestReviews";
 import TopLists from "./TopLists";
 
+import UserNavbar from "../components/UserNavbar";
+import Hero from "../components/Hero";
+import TrendingThisWeek from "../components/TrendingThisWeek";
+import TopReviews from "./TopReviews";
+
+import "../UserHome.css";
 
 function Home() {
 
     return (
-        <div>
+        <div className="user-home">
 
-            <h1>MovieVerse</h1>
+            <section className="hero-wrapper">
 
-            <LatestReviews/>
-            <TopLists/>
+                <UserNavbar />
+
+                <Hero />
+
+            </section>
+
+            <TrendingThisWeek />
+
+            <LatestReviews />
+
+            <TopLists />
+
+            <TopReviews />
 
         </div>
     );
