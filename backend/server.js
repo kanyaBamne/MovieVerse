@@ -686,6 +686,123 @@ app.get("/reviews/latest", async (req, res) => {
 
     }
 });
+
+// ==================================================
+// GET REVIEWS FOR SINGLE MOVIE
+// ==================================================
+
+app.get("/reviews/movie/:movieId", async (req, res) => {
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { movieId } = req.params;
+
+        const reviews = await db
+            .collection("reviews")
+            .aggregate([
+
+                // Only reviews for this movie
+                {
+                    $match: {
+                        movieId: new mongoose.Types.ObjectId(movieId)
+                    }
+                },
+
+                // Get user information
+                {
+                    $lookup: {
+                        from: "user",
+                        localField: "userId",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+
+                // Convert user array into object
+                {
+                    $unwind: {
+                        path: "$user",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+
+                // Latest reviews first
+                {
+                    $sort: {
+                        createdAt: -1
+                    }
+                }
+
+            ])
+            .toArray();
+
+
+        // Convert to frontend-friendly data
+        const formattedReviews = reviews.map((review) => {
+
+            return {
+
+                id: review._id.toString(),
+
+                reviewTitle: review.reviewTitle || "",
+
+                reviewText: review.reviewText || "",
+
+                rating: review.rating || 0,
+
+                likesCount: review.likesCount || 0,
+
+                createdAt: review.createdAt || "",
+
+                user: {
+
+                    id: review.user?._id
+                        ? review.user._id.toString()
+                        : "",
+
+                    username: review.user?.username || "",
+
+                    name: review.user?.name || "",
+
+                    profileImage: review.user?.profileImage || ""
+
+                }
+
+            };
+
+        });
+
+
+        res.json({
+
+            success: true,
+
+            reviews: formattedReviews
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Movie reviews error:",
+            error
+        );
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to load movie reviews"
+
+        });
+
+    }
+
+});
+
+
 // ==================================================
 // GET TOP LISTS
 // ==================================================

@@ -15,7 +15,7 @@ function UserNavbar() {
                     <input type="text" aria-label="Search" />
                 </div>
 
-                <Link to="/surprise">Movie Roulette</Link>
+                <Link to="/movie-roulette">Movie Roulette</Link>
             </nav>
 
             <div className="user-navbar-actions">

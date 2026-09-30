@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const checkImage = (url) => {
     return new Promise((resolve) => {
@@ -12,6 +13,8 @@ const checkImage = (url) => {
 };
 
 function TrendingThisWeek() {
+
+    const navigate = useNavigate();
 
     const [trendingMovies, setTrendingMovies] = useState([]);
 
@@ -95,11 +98,22 @@ function TrendingThisWeek() {
                         key={movie._id || movie.id || index}
                         className="trending-card"
                     >
+<img
+    src={movie.posterUrl}
+    alt={movie.title}
+    onClick={() => {
+        console.log("CLICKED MOVIE:");
+        console.log(movie);
+        console.log("MOVIE ID:", movie.id);
 
-                        <img
-                            src={movie.posterUrl}
-                            alt={movie.title}
-                        />
+        navigate(`/movies/${movie.id}`);
+    }}
+    style={{
+        cursor: "pointer",
+        position: "relative",
+        zIndex: 10
+    }}
+/>
 
                         <div className="trending-card-info">
 

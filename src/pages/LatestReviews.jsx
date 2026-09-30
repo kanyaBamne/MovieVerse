@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function LatestReviews() {
+
+    const navigate = useNavigate();
 
     const [reviews, setReviews] = useState([]);
 
@@ -296,24 +299,16 @@ function LatestReviews() {
 
 
                                     {/* POSTER */}
-
-                                    <img
-                                        src={
-                                            review.movie.poster
-                                        }
-
-                                        alt={
-                                            review.movie.title
-                                        }
-
-                                        onError={(e) => {
-
-                                            e.target.src =
-                                                "https://via.placeholder.com/150x220?text=No+Poster";
-
-                                        }}
-
-                                    />
+<img
+    src={review.movie.poster}
+    alt={review.movie.title}
+    onClick={() => navigate(`/movies/${review.movie.id}`)}
+    style={{ cursor: "pointer" }}
+    onError={(e) => {
+        e.target.src =
+            "https://via.placeholder.com/150x220?text=No+Poster";
+    }}
+/>
 
 
                                     {/* HOVER DETAILS */}

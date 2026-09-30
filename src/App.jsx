@@ -11,6 +11,9 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Register from "./pages/Register";
+import AboutUs from "./pages/AboutUs";
+import MovieRoulette from "./pages/MovieRoulette";
+import MovieDetail from "./pages/MovieDetail";
 
 function App() {
   return (
@@ -21,6 +24,12 @@ function App() {
         <Route path="/login" element={<Login />} />
         {/* Registration page */}
         <Route path="/register" element={<Register />} />
+
+          <Route path="/" element={<Home />} />
+    <Route path="/about" element={<AboutUs />} />
+    <Route path="/movie-roulette" element={<MovieRoulette />} />
+    <Route path="/movies/:id" element={<MovieDetail />} />
+
 
         {/* Admin pages */}
         <Route

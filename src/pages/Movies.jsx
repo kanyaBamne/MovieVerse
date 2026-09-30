@@ -24,10 +24,10 @@ function Movies() {
 
     const moviesPerPage = 10;
 
-   
-   // ==========================================
-// FETCH MOVIES FROM BACKEND
-// ==========================================
+
+    // ==========================================
+    // FETCH MOVIES FROM BACKEND
+    // ==========================================
 
     const fetchMovies = async () => {
         try {
@@ -66,50 +66,50 @@ function Movies() {
     };
 
     // ==========================================
-// DELETE MOVIE
-// ==========================================
+    // DELETE MOVIE
+    // ==========================================
 
-const handleDelete = async () => {
-    if (!movieToDelete) return;
+    const handleDelete = async () => {
+        if (!movieToDelete) return;
 
-    try {
-        setError("");
+        try {
+            setError("");
 
-        const response = await fetch(
-            `http://localhost:5000/movies/${movieToDelete.id}`,
-            {
-                method: "DELETE",
+            const response = await fetch(
+                `http://localhost:5000/movies/${movieToDelete.id}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Failed to delete movie"
+                );
             }
-        );
 
-        const data = await response.json();
+            console.log("Movie deleted:", data);
 
-        if (!response.ok) {
-            throw new Error(
-                data.message || "Failed to delete movie"
+            // Close confirmation modal
+            setMovieToDelete(null);
+
+            // Reload movies from MongoDB
+            fetchMovies();
+
+        } catch (err) {
+            console.error("Delete movie error:", err);
+
+            setError(
+                err.message || "Failed to delete movie."
             );
         }
+    };
 
-        console.log("Movie deleted:", data);
-
-        // Close confirmation modal
-        setMovieToDelete(null);
-
-        // Reload movies from MongoDB
-        fetchMovies();
-
-    } catch (err) {
-        console.error("Delete movie error:", err);
-
-        setError(
-            err.message || "Failed to delete movie."
-        );
-    }
-};
-
-// ==========================================
-// LOAD MOVIES WHEN FILTERS/PAGE CHANGE
-// ==========================================
+    // ==========================================
+    // LOAD MOVIES WHEN FILTERS/PAGE CHANGE
+    // ==========================================
 
     useEffect(() => {
         fetchMovies();
@@ -295,7 +295,11 @@ const handleDelete = async () => {
                                     <tr key={movie.id}>
 
                                         <td>
-                                            <div className="table-poster">
+                                            <div
+                                                className="table-poster"
+                                                onClick={() => navigate(`/movies/${movie.id}`)}
+                                                style={{ cursor: "pointer" }}
+                                            >
 
                                                 {movie.poster ? (
                                                     <img
@@ -316,7 +320,12 @@ const handleDelete = async () => {
 
                                         <td>
                                             <div className="table-movie-info">
-                                                <strong>{movie.title}</strong>
+                                                <strong
+                                                    onClick={() => navigate(`/movies/${movie.id}`)}
+                                                    style={{ cursor: "pointer" }}
+                                                >
+                                                    {movie.title}
+                                                </strong>
                                                 <span>{movie.director}</span>
                                             </div>
                                         </td>

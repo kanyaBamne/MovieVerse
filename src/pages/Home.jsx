@@ -5,7 +5,7 @@ import UserNavbar from "../components/UserNavbar";
 import Hero from "../components/Hero";
 import TrendingThisWeek from "../components/TrendingThisWeek";
 import TopReviews from "./TopReviews";
-
+import AboutUsStrip from "../components/AboutUsStrip";
 import "../UserHome.css";
 
 function Home() {
@@ -22,6 +22,8 @@ function Home() {
             </section>
 
             <TrendingThisWeek />
+
+            <AboutUsStrip/>
 
             <LatestReviews />
 

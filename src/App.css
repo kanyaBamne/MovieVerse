@@ -3327,3 +3327,1488 @@ button {
 
     padding: 40px;
 }
+
+/* =========================================
+   ABOUT US PAGE
+========================================= */
+
+
+.about-page {
+    min-height: 100vh;
+    background: #FFFEF8;
+    color: #605F5F;
+}
+
+
+
+
+/* =========================================
+   BANNER
+========================================= */
+
+
+.about-page .about-banner {
+    min-height: 430px;
+    position: relative;
+
+
+    display: flex;
+    align-items: flex-end;
+
+
+    padding: 60px;
+    margin: 0 0 80px;
+
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(96, 95, 95, 0.05),
+            rgba(96, 95, 95, 0.55)
+        ),
+        #C3C3C3;
+
+
+    background-position: center;
+    background-size: cover;
+
+
+    overflow: hidden;
+}
+
+
+.about-page .about-banner::before {
+    content: "";
+    position: absolute;
+
+
+    width: 260px;
+    height: 360px;
+
+
+    right: 12%;
+    bottom: -100px;
+
+
+    border: 1px solid rgba(255, 254, 248, 0.45);
+
+
+    transform: rotate(8deg);
+}
+
+
+.about-page .about-banner::after {
+    content: "";
+    position: absolute;
+
+
+    width: 180px;
+    height: 250px;
+
+
+    right: 7%;
+    bottom: -70px;
+
+
+    border: 1px solid rgba(255, 254, 248, 0.3);
+
+
+    transform: rotate(-7deg);
+}
+
+
+.about-page .about-banner-overlay {
+    position: relative;
+    z-index: 2;
+
+
+    max-width: 650px;
+}
+
+
+.about-page .banner-label {
+    display: block;
+
+
+    margin-bottom: 10px;
+
+
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+
+
+    color: #FFFEF8;
+}
+
+
+.about-page .about-banner h1 {
+    margin: 0;
+
+
+    font-size: clamp(48px, 8vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -4px;
+
+
+    color: #FFFEF8;
+}
+
+
+.about-page .about-banner p {
+    margin: 18px 0 0;
+
+
+    font-size: 16px;
+
+
+    color: #FFFEF8;
+}
+
+
+
+
+/* =========================================
+   INTRODUCTION
+========================================= */
+
+
+.about-page .about-intro {
+    width: min(900px, calc(100% - 48px));
+
+
+    margin: 0 auto 90px;
+
+
+    text-align: center;
+}
+
+
+.about-page .intro-label {
+    margin: 0 0 22px;
+
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+
+
+    color: #C3C3C3;
+}
+
+
+.about-page .about-intro h2 {
+    margin: 0;
+
+
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1.12;
+    letter-spacing: -2px;
+    font-weight: 600;
+
+
+    color: #605F5F;
+}
+
+
+.about-page .intro-text {
+    max-width: 650px;
+
+
+    margin: 28px auto 0;
+
+
+    font-size: 15px;
+    line-height: 1.8;
+
+
+    color: #605F5F;
+}
+
+
+
+
+/* =========================================
+   FEATURES
+========================================= */
+
+
+.about-page .about-features {
+    width: min(1100px, calc(100% - 48px));
+
+
+    margin: 0 auto;
+    padding-bottom: 100px;
+
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+}
+
+
+
+
+/* =========================================
+   FEATURE CARD
+========================================= */
+
+
+.about-page .feature-card {
+    min-height: 330px;
+
+
+    position: relative;
+    overflow: hidden;
+
+
+    padding: 30px;
+
+
+    background: #E3E8CC;
+
+
+    border: 1px solid #C3C3C3;
+    border-radius: 16px;
+
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+.about-page .feature-card:hover {
+    transform: translateY(-6px);
+
+
+    box-shadow:
+        0 12px 28px rgba(96, 95, 95, 0.08);
+}
+
+
+
+
+/* =========================================
+   FEATURE NUMBER
+========================================= */
+
+
+.about-page .feature-number {
+    position: absolute;
+
+
+    top: 22px;
+    right: 26px;
+
+
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+
+
+    color: #605F5F;
+    opacity: 0.65;
+}
+
+
+
+
+/* =========================================
+   FEATURE CONTENT
+========================================= */
+
+
+.about-page .feature-content {
+    position: absolute;
+
+
+    left: 30px;
+    right: 30px;
+    bottom: 30px;
+
+
+    z-index: 2;
+}
+
+
+.about-page .feature-mini {
+    display: block;
+
+
+    margin-bottom: 8px;
+
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+
+
+    color: #605F5F;
+    opacity: 0.6;
+}
+
+
+.about-page .feature-content h3 {
+    margin: 0 0 12px;
+
+
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -1px;
+
+
+    color: #605F5F;
+}
+
+
+.about-page .feature-content p {
+    max-width: 330px;
+
+
+    margin: 0;
+
+
+    font-size: 14px;
+    line-height: 1.65;
+
+
+    color: #605F5F;
+}
+
+
+
+
+/* =========================================
+   ARROW
+========================================= */
+
+
+.about-page .feature-arrow {
+    position: absolute;
+
+
+    right: 28px;
+    bottom: 28px;
+
+
+    font-size: 25px;
+
+
+    color: #605F5F;
+
+
+    transition: transform 0.25s ease;
+}
+
+
+.about-page .feature-card:hover .feature-arrow {
+    transform: translate(4px, -4px);
+}
+
+
+
+
+/* =========================================
+   DISCOVER
+========================================= */
+
+
+.about-page .feature-discover {
+    min-height: 370px;
+}
+
+
+.about-page .feature-discover::before {
+    content: "";
+
+
+    position: absolute;
+
+
+    width: 190px;
+    height: 260px;
+
+
+    top: -75px;
+    right: 70px;
+
+
+    border: 1px solid rgba(96, 95, 95, 0.18);
+    border-radius: 8px;
+
+
+    transform: rotate(12deg);
+}
+
+
+.about-page .feature-discover::after {
+    content: "";
+
+
+    position: absolute;
+
+
+    width: 190px;
+    height: 260px;
+
+
+    top: -55px;
+    right: 25px;
+
+
+    border: 1px solid rgba(96, 95, 95, 0.14);
+    border-radius: 8px;
+
+
+    transform: rotate(-7deg);
+}
+
+
+
+
+/* =========================================
+   TRACK
+========================================= */
+
+
+.about-page .feature-track {
+    background: #FFFEF8;
+}
+
+
+.about-page .track-line {
+    position: absolute;
+
+
+    top: 45%;
+    left: 30px;
+    right: 30px;
+
+
+    height: 1px;
+
+
+    background: #C3C3C3;
+
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.about-page .track-line span {
+    width: 11px;
+    height: 11px;
+
+
+    border: 2px solid #605F5F;
+    border-radius: 50%;
+
+
+    background: #FFFEF8;
+}
+
+
+.about-page .track-line span:nth-child(2) {
+    width: 17px;
+    height: 17px;
+
+
+    background: #E3E8CC;
+}
+
+
+
+
+/* =========================================
+   COLLECT
+========================================= */
+
+
+.about-page .feature-collect {
+    min-height: 370px;
+
+
+    background: #E3E8CC;
+}
+
+
+.about-page .collect-decoration {
+    position: absolute;
+
+
+    top: 40px;
+    right: 50px;
+
+
+    width: 150px;
+    height: 190px;
+}
+
+
+.about-page .collect-decoration span {
+    position: absolute;
+
+
+    width: 120px;
+    height: 165px;
+
+
+    border: 1px solid #C3C3C3;
+    border-radius: 10px;
+
+
+    background: #FFFEF8;
+}
+
+
+.about-page .collect-decoration span:first-child {
+    top: 15px;
+    left: 20px;
+
+
+    transform: rotate(8deg);
+}
+
+
+.about-page .collect-decoration span:last-child {
+    top: 0;
+    left: 0;
+
+
+    transform: rotate(-5deg);
+}
+
+
+
+
+/* =========================================
+   FAVOURITE
+========================================= */
+
+
+.about-page .feature-favourite {
+    background: #FFFEF8;
+}
+
+
+.about-page .favourite-symbol {
+    position: absolute;
+
+
+    top: 30px;
+    left: 30px;
+
+
+    font-size: 95px;
+    line-height: 1;
+
+
+    color: #605F5F;
+    opacity: 0.12;
+}
+
+
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+
+@media (max-width: 800px) {
+
+
+    .about-page .about-banner {
+        min-height: 350px;
+
+
+        padding: 40px 28px;
+        margin-bottom: 60px;
+    }
+
+
+    .about-page .about-intro {
+        margin-bottom: 65px;
+    }
+
+
+    .about-page .about-features {
+        grid-template-columns: 1fr;
+
+
+        width: min(600px, calc(100% - 32px));
+    }
+
+
+    .about-page .feature-card,
+    .about-page .feature-discover,
+    .about-page .feature-collect {
+        min-height: 320px;
+    }
+}
+
+
+
+
+@media (max-width: 500px) {
+
+
+.about-page .about-banner {
+    min-height: 430px;
+    position: relative;
+
+
+    display: flex;
+    align-items: flex-end;
+
+
+    padding: 60px;
+    margin: 0 0 80px;
+
+
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
+
+
+    overflow: hidden;
+}
+
+
+    .about-page .about-banner h1 {
+        letter-spacing: -2px;
+    }
+
+
+    .about-page .about-intro {
+        width: calc(100% - 32px);
+    }
+
+
+    .about-page .about-intro h2 {
+        letter-spacing: -1px;
+    }
+
+
+    .about-page .intro-text {
+        font-size: 14px;
+    }
+
+
+    .about-page .about-features {
+        width: calc(100% - 24px);
+
+
+        gap: 18px;
+        padding-bottom: 60px;
+    }
+
+
+    .about-page .feature-card {
+        min-height: 300px;
+        padding: 24px;
+    }
+
+
+     .about-page .feature-content {
+        left: 24px;
+        right: 24px;
+        bottom: 24px;
+    }
+}
+
+
+/* =========================================
+   ABOUT US PAGE
+========================================= */
+
+
+.about-page {
+    min-height: 100vh;
+    background: #FFFEF8;
+    color: #605F5F;
+}
+
+
+
+
+/* =========================================
+   BANNER
+========================================= */
+
+
+.about-page .about-banner {
+    min-height: 430px;
+    position: relative;
+
+
+    display: flex;
+    align-items: flex-end;
+
+
+    padding: 60px;
+    margin: 0 0 80px;
+
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(96, 95, 95, 0.05),
+            rgba(96, 95, 95, 0.55)
+        ),
+        #C3C3C3;
+
+
+    background-position: center;
+    background-size: cover;
+
+
+    overflow: hidden;
+}
+
+
+.about-page .about-banner::before {
+    content: "";
+    position: absolute;
+
+
+    width: 260px;
+    height: 360px;
+
+
+    right: 12%;
+    bottom: -100px;
+
+
+    border: 1px solid rgba(255, 254, 248, 0.45);
+
+
+    transform: rotate(8deg);
+}
+
+
+.about-page .about-banner::after {
+    content: "";
+    position: absolute;
+
+
+    width: 180px;
+    height: 250px;
+
+
+    right: 7%;
+    bottom: -70px;
+
+
+    border: 1px solid rgba(255, 254, 248, 0.3);
+
+
+    transform: rotate(-7deg);
+}
+
+
+.about-page .about-banner-overlay {
+    position: relative;
+    z-index: 2;
+
+
+    max-width: 650px;
+}
+
+
+.about-page .banner-label {
+    display: block;
+
+
+    margin-bottom: 10px;
+
+
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+
+
+    color: #FFFEF8;
+}
+
+
+.about-page .about-banner h1 {
+    margin: 0;
+
+
+    font-size: clamp(48px, 8vw, 92px);
+    line-height: 0.95;
+    letter-spacing: -4px;
+
+
+    color: #FFFEF8;
+}
+
+
+.about-page .about-banner p {
+    margin: 18px 0 0;
+
+
+    font-size: 16px;
+
+
+    color: #FFFEF8;
+}
+
+
+
+
+/* =========================================
+   INTRODUCTION
+========================================= */
+
+
+.about-page .about-intro {
+    width: min(900px, calc(100% - 48px));
+
+
+    margin: 0 auto 90px;
+
+
+    text-align: center;
+}
+
+
+.about-page .intro-label {
+    margin: 0 0 22px;
+
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+
+
+    color: #C3C3C3;
+}
+
+
+.about-page .about-intro h2 {
+    margin: 0;
+
+
+    font-size: clamp(32px, 5vw, 56px);
+    line-height: 1.12;
+    letter-spacing: -2px;
+    font-weight: 600;
+
+
+    color: #605F5F;
+}
+
+
+.about-page .intro-text {
+    max-width: 650px;
+
+
+    margin: 28px auto 0;
+
+
+    font-size: 15px;
+    line-height: 1.8;
+
+
+    color: #605F5F;
+}
+
+
+
+
+/* =========================================
+   FEATURES
+========================================= */
+
+
+.about-page .about-features {
+    width: min(1100px, calc(100% - 48px));
+
+
+    margin: 0 auto;
+    padding-bottom: 100px;
+
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+}
+
+
+
+
+/* =========================================
+   FEATURE CARD
+========================================= */
+
+
+.about-page .feature-card {
+    min-height: 330px;
+
+
+    position: relative;
+    overflow: hidden;
+
+
+    padding: 30px;
+
+
+    background: #E3E8CC;
+
+
+    border: 1px solid #C3C3C3;
+    border-radius: 16px;
+
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+.about-page .feature-card:hover {
+    transform: translateY(-6px);
+
+
+    box-shadow:
+        0 12px 28px rgba(96, 95, 95, 0.08);
+}
+
+
+
+
+/* =========================================
+   FEATURE NUMBER
+========================================= */
+
+
+.about-page .feature-number {
+    position: absolute;
+
+
+    top: 22px;
+    right: 26px;
+
+
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1px;
+
+
+    color: #605F5F;
+    opacity: 0.65;
+}
+
+
+
+
+/* =========================================
+   FEATURE CONTENT
+========================================= */
+
+
+.about-page .feature-content {
+    position: absolute;
+
+
+    left: 30px;
+    right: 30px;
+    bottom: 30px;
+
+
+    z-index: 2;
+}
+
+
+.about-page .feature-mini {
+    display: block;
+
+
+    margin-bottom: 8px;
+
+
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+
+
+    color: #605F5F;
+    opacity: 0.6;
+}
+
+
+.about-page .feature-content h3 {
+    margin: 0 0 12px;
+
+
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -1px;
+
+
+    color: #605F5F;
+}
+
+
+.about-page .feature-content p {
+    max-width: 330px;
+
+
+    margin: 0;
+
+
+    font-size: 14px;
+    line-height: 1.65;
+
+
+    color: #605F5F;
+}
+
+
+
+
+/* =========================================
+   ARROW
+========================================= */
+
+
+.about-page .feature-arrow {
+    position: absolute;
+
+
+    right: 28px;
+    bottom: 28px;
+
+
+    font-size: 25px;
+
+
+    color: #605F5F;
+
+
+    transition: transform 0.25s ease;
+}
+
+
+.about-page .feature-card:hover .feature-arrow {
+    transform: translate(4px, -4px);
+}
+
+
+
+
+/* =========================================
+   DISCOVER
+========================================= */
+
+
+.about-page .feature-discover {
+    min-height: 370px;
+}
+
+
+.about-page .feature-discover::before {
+    content: "";
+
+
+    position: absolute;
+
+
+    width: 190px;
+    height: 260px;
+
+
+    top: -75px;
+    right: 70px;
+
+
+    border: 1px solid rgba(96, 95, 95, 0.18);
+    border-radius: 8px;
+
+
+    transform: rotate(12deg);
+}
+
+
+.about-page .feature-discover::after {
+    content: "";
+
+
+    position: absolute;
+
+
+    width: 190px;
+    height: 260px;
+
+
+    top: -55px;
+    right: 25px;
+
+
+    border: 1px solid rgba(96, 95, 95, 0.14);
+    border-radius: 8px;
+
+
+    transform: rotate(-7deg);
+}
+
+
+
+
+/* =========================================
+   TRACK
+========================================= */
+
+
+.about-page .feature-track {
+    background: #FFFEF8;
+}
+
+
+.about-page .track-line {
+    position: absolute;
+
+
+    top: 45%;
+    left: 30px;
+    right: 30px;
+
+
+    height: 1px;
+
+
+    background: #C3C3C3;
+
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.about-page .track-line span {
+    width: 11px;
+    height: 11px;
+
+
+    border: 2px solid #605F5F;
+    border-radius: 50%;
+
+
+    background: #FFFEF8;
+}
+
+
+.about-page .track-line span:nth-child(2) {
+    width: 17px;
+    height: 17px;
+
+
+    background: #E3E8CC;
+}
+
+
+
+
+/* =========================================
+   COLLECT
+========================================= */
+
+
+.about-page .feature-collect {
+    min-height: 370px;
+
+
+    background: #E3E8CC;
+}
+
+
+.about-page .collect-decoration {
+    position: absolute;
+
+
+    top: 40px;
+    right: 50px;
+
+
+    width: 150px;
+    height: 190px;
+}
+
+
+.about-page .collect-decoration span {
+    position: absolute;
+
+
+    width: 120px;
+    height: 165px;
+
+
+    border: 1px solid #C3C3C3;
+    border-radius: 10px;
+
+
+    background: #FFFEF8;
+}
+
+
+.about-page .collect-decoration span:first-child {
+    top: 15px;
+    left: 20px;
+
+
+    transform: rotate(8deg);
+}
+
+
+.about-page .collect-decoration span:last-child {
+    top: 0;
+    left: 0;
+
+
+    transform: rotate(-5deg);
+}
+
+
+
+
+/* =========================================
+   FAVOURITE
+========================================= */
+
+
+.about-page .feature-favourite {
+    background: #FFFEF8;
+}
+
+
+.about-page .favourite-symbol {
+    position: absolute;
+
+
+    top: 30px;
+    left: 30px;
+
+
+    font-size: 95px;
+    line-height: 1;
+
+
+    color: #605F5F;
+    opacity: 0.12;
+}
+
+
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+
+@media (max-width: 800px) {
+
+
+    .about-page .about-banner {
+        min-height: 350px;
+
+
+        padding: 40px 28px;
+        margin-bottom: 60px;
+    }
+
+
+    .about-page .about-intro {
+        margin-bottom: 65px;
+    }
+
+
+    .about-page .about-features {
+        grid-template-columns: 1fr;
+
+
+        width: min(600px, calc(100% - 32px));
+    }
+
+
+    .about-page .feature-card,
+    .about-page .feature-discover,
+    .about-page .feature-collect {
+        min-height: 320px;
+    }
+}
+
+
+
+
+@media (max-width: 500px) {
+
+
+.about-page .about-banner {
+    min-height: 430px;
+    position: relative;
+
+
+    display: flex;
+    align-items: flex-end;
+
+
+    padding: 60px;
+    margin: 0 0 80px;
+
+
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-size: contain;
+
+
+    overflow: hidden;
+}
+
+
+    .about-page .about-banner h1 {
+        letter-spacing: -2px;
+    }
+
+
+    .about-page .about-intro {
+        width: calc(100% - 32px);
+    }
+
+
+    .about-page .about-intro h2 {
+        letter-spacing: -1px;
+    }
+
+
+    .about-page .intro-text {
+        font-size: 14px;
+    }
+
+
+    .about-page .about-features {
+        width: calc(100% - 24px);
+
+
+        gap: 18px;
+        padding-bottom: 60px;
+    }
+
+
+    .about-page .feature-card {
+        min-height: 300px;
+        padding: 24px;
+    }
+
+
+     .about-page .feature-content {
+        left: 24px;
+        right: 24px;
+        bottom: 24px;
+    }
+}
+
+/* ================================
+   ABOUT US STRIP
+================================ */
+
+.about-strip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: 110px 20px 120px;
+
+    background: #ffffff;
+    text-align: center;
+}
+
+
+/* Heading */
+
+.about-strip h2 {
+    margin: 0;
+
+    font-size: clamp(64px, 9vw, 110px);
+    font-weight: 800;
+    line-height: 1;
+
+    letter-spacing: -5px;
+
+    color: #A8B59A;
+}
+
+
+/* CTA */
+
+.about-strip-cta {
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    margin-top: 42px;
+}
+
+.about-strip-cta > span {
+    font-size: 28px;
+    font-weight: 400;
+
+    color: #333;
+}
+
+
+/* Button */
+
+.about-strip-cta button {
+    border: none;
+
+    padding: 14px 30px;
+
+    border-radius: 999px;
+
+    background: #333;
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.about-strip-cta button:hover {
+    background: #555;
+    transform: translateX(4px);
+}
+
+
+/* Mobile */
+
+@media (max-width: 600px) {
+
+    .about-strip {
+        padding: 80px 20px 90px;
+    }
+
+    .about-strip h2 {
+        font-size: 60px;
+        letter-spacing: -3px;
+    }
+
+    .about-strip-cta {
+        margin-top: 32px;
+    }
+}
