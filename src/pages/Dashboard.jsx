@@ -194,14 +194,18 @@ function Dashboard() {
                 <div className="recent-user" key={user.id}>
 
                   <div className="user-avatar">
-                    {user.profileImage ? (
-                      <img
-                        src={user.profileImage}
-                        alt={user.username}
-                      />
-                    ) : (
-                      "👤"
-                    )}
+                      {user.profileImage ? (
+                          <img
+                              src={
+                                  user.profileImage.startsWith("http")
+                                      ? user.profileImage
+                                      : `http://localhost:5000${user.profileImage}`
+                              }
+                              alt={user.username}
+                          />
+                      ) : (
+                          "👤"
+                      )}
                   </div>
 
                   <div className="user-info">

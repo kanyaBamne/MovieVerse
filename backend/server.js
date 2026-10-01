@@ -1289,94 +1289,166 @@ app.delete("/users/:id", async (req, res) => {
     }
 });
 
-app.post("/register", async (req, res) => {
-    try {
-        const db = mongoose.connection.db;
+const profileUploadDir = path.join(
+    __dirname,
+    "uploads",
+    "profiles"
+);
 
-        const {
-            name,
-            username,
-            email,
-            password,
-        } = req.body;
+if (!fs.existsSync(profileUploadDir)) {
+    fs.mkdirSync(profileUploadDir, {
+        recursive: true,
+    });
+}
 
-        // Check required fields
-        if (!name || !username || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "All fields are required",
-            });
+const profileStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, profileUploadDir);
+    },
+
+    filename: function (req, file, cb) {
+        const extension = path.extname(file.originalname);
+
+        const fileName =
+            Date.now() +
+            "-" +
+            Math.round(Math.random() * 1e9) +
+            extension;
+
+        cb(null, fileName);
+    },
+});
+
+const profileUpload = multer({
+    storage: profileStorage,
+
+    fileFilter: function (req, file, cb) {
+        const allowedTypes = [
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp",
+        ];
+
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(
+                new Error(
+                    "Only JPG, JPEG, PNG and WEBP images are allowed."
+                )
+            );
         }
+    },
 
-        // Check whether email already exists
-        const existingEmail = await db
-            .collection("user")
-            .findOne({ email });
+    limits: {
+        fileSize: 5 * 1024 * 1024,
+    },
+});
 
-        if (existingEmail) {
-            return res.status(409).json({
-                success: false,
-                message: "Email already registered",
-            });
-        }
+app.post(
+    "/register",
+    profileUpload.single("profileImage"),
+    async (req, res) => {
+        try {
+            const db = mongoose.connection.db;
 
-        // Check whether username already exists
-        const existingUsername = await db
-            .collection("user")
-            .findOne({ username });
-
-        if (existingUsername) {
-            return res.status(409).json({
-                success: false,
-                message: "Username already taken",
-            });
-        }
-
-        // Hash password
-        const bcrypt = require("bcrypt");
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create user
-        const newUser = {
-            name,
-            username,
-            email,
-            password: hashedPassword,
-            profileImage: "",
-            bio: "",
-            role: "user",
-            status: "active",
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
-
-        const result = await db
-            .collection("user")
-            .insertOne(newUser);
-
-        res.status(201).json({
-            success: true,
-            message: "Registration successful",
-            user: {
-                id: result.insertedId.toString(),
+            const {
                 name,
                 username,
                 email,
+                password,
+                bio,
+            } = req.body;
+
+            if (!name || !username || !email || !password) {
+                return res.status(400).json({
+                    success: false,
+                    message: "All required fields must be filled",
+                });
+            }
+
+            const existingEmail = await db
+                .collection("user")
+                .findOne({ email });
+
+            if (existingEmail) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Email already registered",
+                });
+            }
+
+            const existingUsername = await db
+                .collection("user")
+                .findOne({ username });
+
+            if (existingUsername) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Username already taken",
+                });
+            }
+
+            const bcrypt = require("bcrypt");
+
+            const hashedPassword = await bcrypt.hash(
+                password,
+                10
+            );
+
+            let profileImage = "";
+
+            if (req.file) {
+                profileImage =
+                    "/uploads/profiles/" +
+                    req.file.filename;
+            }
+
+            const newUser = {
+                name,
+                username,
+                email,
+                password: hashedPassword,
+                profileImage,
+                bio: bio || "",
                 role: "user",
-            },
-        });
+                status: "active",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            };
 
-    } catch (error) {
-        console.error("Registration error:", error);
+            const result = await db
+                .collection("user")
+                .insertOne(newUser);
 
-        res.status(500).json({
-            success: false,
-            message: "Registration failed",
-        });
+            res.status(201).json({
+                success: true,
+                message: "Registration successful",
+                user: {
+                    id: result.insertedId.toString(),
+                    name,
+                    username,
+                    email,
+                    profileImage,
+                    bio: bio || "",
+                    role: "user",
+                },
+            });
+
+        } catch (error) {
+            console.error(
+                "Registration error:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message: "Registration failed",
+            });
+        }
     }
-});
-
+);
 // ==================================================
 // ADMIN LOGIN
 // ==================================================
@@ -1565,7 +1637,7 @@ app.get("/top-reviews", async (req, res) => {
 
                 // Show top 5 movies
                 {
-                    $limit: 5
+                    $limit: 1
                 },
 
                 // Get movie details
@@ -1659,27 +1731,20 @@ app.get("/top-reviews", async (req, res) => {
                 },
 
                 // Final data sent to React
-                {
+               {
                     $project: {
                         _id: 0,
-
                         movieId: "$_id",
-
                         title: "$movie.Title",
-
                         genre: "$movie.Genre",
-
-                        poster: "$movie.poster",
-
+                        year: "$movie.Year",
+                        duration: "$movie.Duration (min)",
+                        description: "$movie.Description",
+                        poster: "$movie.Poster",
                         reviewCount: 1,
-
                         averageRating: {
-                            $round: [
-                                "$averageRating",
-                                1
-                            ]
+                            $round: ["$averageRating", 1]
                         },
-
                         review: "$latestReview"
                     }
                 }
