@@ -1548,7 +1548,7 @@
 }
 
 .user-navbar-profile-name {
-    color: #444;
+    color: #ffffff;
     font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
@@ -1556,4 +1556,60 @@
 
 .user-navbar-profile:hover .user-navbar-profile-name {
     color: #777477;
+}
+
+.user-navbar-profile-wrapper {
+    position: relative;
+}
+
+.user-navbar-profile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+}
+
+.user-navbar-profile-arrow {
+    font-size: 9px;
+    color: #777477;
+    margin-left: 2px;
+}
+
+.user-profile-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 150px;
+    background: #ffffff;
+    border: 1px solid #e7e2d8;
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+}
+
+.user-profile-dropdown a,
+.user-profile-dropdown button {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #444;
+    text-align: left;
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.user-profile-dropdown a:hover,
+.user-profile-dropdown button:hover {
+    background: #f5f2eb;
 }
