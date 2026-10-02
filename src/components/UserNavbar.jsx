@@ -1,10 +1,25 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 function UserNavbar() {
+
+    const navigate = useNavigate();
+
+    const [showMenu, setShowMenu] = useState(false);
 
     const user = JSON.parse(
         sessionStorage.getItem("user")
     );
+
+    const handleLogout = () => {
+
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("admin");
+
+        setShowMenu(false);
+
+        navigate("/login");
+    };
 
     return (
         <header className="user-navbar">
@@ -12,7 +27,6 @@ function UserNavbar() {
             <Link to="/" className="user-navbar-logo">
                 MOVIEVERSE
             </Link>
-
 
             <nav className="user-navbar-center">
 
@@ -34,7 +48,6 @@ function UserNavbar() {
                 </Link>
 
             </nav>
-
 
             <div className="user-navbar-actions">
 
@@ -58,42 +71,81 @@ function UserNavbar() {
 
                 ) : (
 
-                    <Link
-                        to="/profile"
-                        className="user-navbar-profile"
-                    >
+                    <div className="user-navbar-profile-wrapper">
 
-                        <div className="user-navbar-profile-image">
+                        <button
+                            type="button"
+                            className="user-navbar-profile"
+                            onClick={() =>
+                                setShowMenu(!showMenu)
+                            }
+                        >
 
-                            {user.profileImage ? (
+                            <div className="user-navbar-profile-image">
 
-                                <img
-                                    src={
-                                        user.profileImage.startsWith("http")
-                                            ? user.profileImage
-                                            : `http://localhost:5000${user.profileImage}`
+                                {user.profileImage ? (
+
+                                    <img
+                                        src={
+                                            user.profileImage.startsWith("http")
+                                                ? user.profileImage
+                                                : `http://localhost:5000${user.profileImage}`
+                                        }
+                                        alt={
+                                            user.name ||
+                                            user.username
+                                        }
+                                    />
+
+                                ) : (
+
+                                    <span>
+                                        {(user.name ||
+                                            user.username ||
+                                            "U")
+                                            .charAt(0)
+                                            .toUpperCase()}
+                                    </span>
+
+                                )}
+
+                            </div>
+
+                            <span className="user-navbar-profile-name">
+                                {user.name || user.username}
+                            </span>
+
+                            <span className="user-navbar-profile-arrow">
+                                ▼
+                            </span>
+
+                        </button>
+
+                        {showMenu && (
+
+                            <div className="user-profile-dropdown">
+
+                                <Link
+                                    to="/profile"
+                                    onClick={() =>
+                                        setShowMenu(false)
                                     }
-                                    alt={user.name || user.username}
-                                />
+                                >
+                                    Profile
+                                </Link>
 
-                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleLogout}
+                                >
+                                    Log Out
+                                </button>
 
-                                <span>
-                                    {(user.name || user.username || "U")
-                                        .charAt(0)
-                                        .toUpperCase()}
-                                </span>
+                            </div>
 
-                            )}
+                        )}
 
-                        </div>
-
-
-                        <span className="user-navbar-profile-name">
-                            {user.name || user.username}
-                        </span>
-
-                    </Link>
+                    </div>
 
                 )}
 
