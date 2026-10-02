@@ -4826,3 +4826,636 @@ button {
         margin-top: 32px;
     }
 }
+
+
+
+
+
+
+/* ========================================
+   MOVIE LIBRARY PAGE
+======================================== */
+
+.movie-library {
+    min-height: 100vh;
+    padding: 60px 5% 100px;
+    background: #FFFEF8;
+    color: #605F5F;
+}
+
+
+/* ========================================
+   PAGE HEADING
+======================================== */
+
+.movie-library-header {
+    margin-bottom: 30px;
+}
+
+.movie-library-label {
+    margin: 0 0 12px;
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+
+    color: #7F8D72;
+}
+
+.movie-library-header h1 {
+    margin: 0;
+
+    font-size: clamp(56px, 8vw, 100px);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -6px;
+
+    color: #333333;
+}
+
+.movie-library-subtitle {
+    margin: 20px 0 0;
+
+    max-width: 520px;
+
+    font-size: 15px;
+    line-height: 1.6;
+
+    color: #888888;
+}
+
+
+/* ========================================
+   SEARCH BAR
+======================================== */
+
+.movie-library-search {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    height: 58px;
+
+    box-sizing: border-box;
+
+    margin-bottom: 48px;
+    padding: 0 20px;
+
+    border: 1px solid #D6D6D0;
+    border-radius: 14px;
+
+    background: #FFFFFF;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.movie-library-search:hover {
+    border-color: #BFC4B6;
+}
+
+.movie-library-search:focus-within {
+    border-color: #9BA58D;
+
+    box-shadow:
+        0 0 0 4px rgba(127, 141, 114, 0.08);
+}
+
+.movie-library-search span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 24px;
+    height: 24px;
+
+    margin-right: 12px;
+
+    font-size: 22px;
+    line-height: 1;
+
+    color: #777777;
+}
+
+.movie-library-search input {
+    flex: 1;
+
+    width: 100%;
+
+    border: none;
+    outline: none;
+
+    background: transparent;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    color: #333333;
+}
+
+.movie-library-search input::placeholder {
+    color: #A2A2A2;
+}
+
+
+/* ========================================
+   MAIN CONTENT LAYOUT
+======================================== */
+
+.movie-library-layout {
+    display: grid;
+
+    grid-template-columns: 235px minmax(0, 1fr);
+
+    gap: 50px;
+
+    align-items: start;
+}
+
+
+/* ========================================
+   FILTER SIDEBAR
+======================================== */
+
+.movie-filters {
+    display: block;
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 25px;
+
+    border: 1px solid #D6D6D0;
+    border-radius: 17px;
+
+    background: #FFFFFF;
+}
+
+
+/* Filter header */
+
+.movie-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+
+    padding-bottom: 20px;
+
+    border-bottom: 1px solid #E7E7E1;
+}
+
+.movie-filter-header h2 {
+    margin: 0;
+
+    font-size: 17px;
+    font-weight: 700;
+
+    color: #333333;
+}
+
+.movie-filter-header button {
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+
+    color: #7F8D72;
+
+    cursor: pointer;
+
+    transition: color 0.2s ease;
+}
+
+.movie-filter-header button:hover {
+    color: #333333;
+}
+
+
+/* ========================================
+   FILTER GROUPS
+======================================== */
+
+.movie-filter-group {
+    display: block;
+
+    width: 100%;
+
+    box-sizing: border-box;
+
+    padding: 24px 0;
+
+    border-bottom: 1px solid #E7E7E1;
+}
+
+.movie-filter-group:last-child {
+    padding-bottom: 5px;
+
+    border-bottom: none;
+}
+
+.movie-filter-group h3 {
+    margin: 0 0 17px;
+
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+
+    color: #555555;
+}
+
+
+/* Checkbox list */
+
+.movie-checkbox-list {
+    display: flex;
+
+    flex-direction: column;
+
+    width: 100%;
+
+    gap: 12px;
+}
+
+.movie-checkbox {
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+
+    gap: 10px;
+
+    margin: 0;
+
+    font-size: 13px;
+
+    color: #777777;
+
+    cursor: pointer;
+
+    transition: color 0.2s ease;
+}
+
+.movie-checkbox:hover {
+    color: #333333;
+}
+
+.movie-checkbox input {
+    flex-shrink: 0;
+
+    width: 15px;
+    height: 15px;
+
+    margin: 0;
+
+    accent-color: #7F8D72;
+
+    cursor: pointer;
+}
+
+.movie-checkbox input:checked + span {
+    font-weight: 600;
+
+    color: #333333;
+}
+
+
+/* ========================================
+   MOVIE RESULTS
+======================================== */
+
+.movie-library-results {
+    min-width: 0;
+}
+
+.movie-library-count {
+    margin: 0 0 20px;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    color: #999999;
+}
+
+
+/* ========================================
+   MOVIE GRID
+======================================== */
+
+.movie-grid {
+    display: grid;
+
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+    gap: 36px 20px;
+}
+
+
+/* ========================================
+   MOVIE CARD
+======================================== */
+
+.movie-card {
+    min-width: 0;
+
+    cursor: pointer;
+}
+
+
+/* Poster */
+
+.movie-card-poster {
+    position: relative;
+
+    width: 100%;
+
+    overflow: hidden;
+
+    aspect-ratio: 2 / 3;
+
+    border-radius: 13px;
+
+    background: #E3E8CC;
+}
+
+.movie-card-poster img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    transition: transform 0.35s ease;
+}
+
+.movie-card:hover .movie-card-poster img {
+    transform: scale(1.035);
+}
+
+
+/* Rating */
+
+.movie-card-rating {
+    position: absolute;
+
+    right: 10px;
+    bottom: 10px;
+
+    padding: 6px 9px;
+
+    border-radius: 999px;
+
+    background: rgba(255, 255, 255, 0.94);
+
+    font-size: 11px;
+    font-weight: 700;
+
+    color: #555555;
+
+    backdrop-filter: blur(4px);
+}
+
+
+/* Movie information */
+
+.movie-card-info {
+    padding: 12px 2px 0;
+}
+
+.movie-card-info h2 {
+    overflow: hidden;
+
+    margin: 0;
+
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+
+    color: #333333;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.movie-card-info p {
+    overflow: hidden;
+
+    margin: 6px 0 0;
+
+    font-size: 11px;
+    line-height: 1.5;
+
+    color: #909090;
+
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
+/* ========================================
+   EMPTY STATE
+======================================== */
+
+.movie-library-empty {
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    min-height: 350px;
+
+    box-sizing: border-box;
+
+    padding: 40px;
+
+    border: 1px solid #D6D6D0;
+    border-radius: 16px;
+
+    background: #FFFFFF;
+
+    text-align: center;
+}
+
+.movie-library-empty h2 {
+    margin: 0 0 8px;
+
+    font-size: 22px;
+    font-weight: 700;
+
+    color: #333333;
+}
+
+.movie-library-empty p {
+    margin: 0;
+
+    font-size: 13px;
+
+    color: #999999;
+}
+
+
+/* ========================================
+   TABLET
+======================================== */
+
+@media (max-width: 1100px) {
+
+    .movie-library {
+        padding-left: 4%;
+        padding-right: 4%;
+    }
+
+    .movie-library-layout {
+        grid-template-columns: 215px minmax(0, 1fr);
+
+        gap: 30px;
+    }
+
+    .movie-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+        gap: 30px 18px;
+    }
+
+}
+
+
+/* ========================================
+   SMALL TABLET
+======================================== */
+
+@media (max-width: 800px) {
+
+    .movie-library {
+        padding: 45px 4% 70px;
+    }
+
+    .movie-library-layout {
+        grid-template-columns: 1fr;
+
+        gap: 35px;
+    }
+
+    .movie-filters {
+        padding: 22px;
+    }
+
+    .movie-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+
+        gap: 28px 16px;
+    }
+
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 550px) {
+
+    .movie-library {
+        padding: 35px 20px 60px;
+    }
+
+    .movie-library-header {
+        margin-bottom: 25px;
+    }
+
+    .movie-library-label {
+        font-size: 10px;
+
+        letter-spacing: 2px;
+    }
+
+    .movie-library-header h1 {
+        font-size: 56px;
+
+        letter-spacing: -4px;
+    }
+
+    .movie-library-subtitle {
+        margin-top: 15px;
+
+        font-size: 13px;
+    }
+
+    .movie-library-search {
+        height: 52px;
+
+        margin-bottom: 30px;
+    }
+
+    .movie-library-layout {
+        gap: 30px;
+    }
+
+    .movie-filters {
+        padding: 20px;
+    }
+
+    .movie-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+
+        gap: 25px 13px;
+    }
+
+    .movie-card-info {
+        padding-top: 10px;
+    }
+
+    .movie-card-info h2 {
+        font-size: 14px;
+    }
+
+    .movie-card-info p {
+        font-size: 10px;
+    }
+
+    .movie-card-rating {
+        right: 7px;
+        bottom: 7px;
+
+        padding: 5px 7px;
+
+        font-size: 10px;
+    }
+
+}
+
+
+/* ========================================
+   VERY SMALL MOBILE
+======================================== */
+
+@media (max-width: 380px) {
+
+    .movie-library {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .movie-library-header h1 {
+        font-size: 50px;
+    }
+
+    .movie-grid {
+        gap: 22px 10px;
+    }
+
+}
+
