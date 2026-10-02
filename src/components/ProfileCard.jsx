@@ -9,7 +9,13 @@ function ProfileCard({ user }) {
             <div className="profile-picture-container">
 
                 <img
-                    src={user.profileImage}
+                    src={
+                        user.profileImage
+                            ? user.profileImage.startsWith("http")
+                                ? user.profileImage
+                                : `http://localhost:5000${user.profileImage}`
+                            : ""
+                    }
                     alt={user.name}
                     className="profile-picture"
                 />

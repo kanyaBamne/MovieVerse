@@ -33,9 +33,10 @@ function Login() {
             }
 
             console.log("Login successful:", data.user);
+            console.log("Profile image:", data.user.profileImage);
 
             // Save logged-in user/admin information
-            localStorage.setItem(
+            sessionStorage.setItem(
                 "user",
                 JSON.stringify(data.user)
             );
@@ -43,7 +44,7 @@ function Login() {
             // Check the role returned by the backend
             if (data.user.role === "admin") {
 
-                localStorage.setItem(
+                sessionStorage.setItem(
                     "admin",
                     JSON.stringify(data.user)
                 );

@@ -15,17 +15,28 @@ function Profile() {
     const [error, setError] = useState("");
 
 
-    // Temporary user ID
-    // Later we will get this from login
-
-    const userId = "6aa391bcca7f9c2f1f91b817";
-
-
     useEffect(() => {
 
         const fetchProfile = async () => {
 
             try {
+
+                // Get the currently logged-in user
+                const loggedInUser =
+                    JSON.parse(sessionStorage.getItem("user"));
+
+                if (!loggedInUser || !loggedInUser.id) {
+
+                    setError("Please sign in to view your profile.");
+
+                    setLoading(false);
+
+                    return;
+
+                }
+
+                const userId = loggedInUser.id;
+
 
                 const response = await fetch(
                     `http://localhost:5000/profile/${userId}`
@@ -111,25 +122,25 @@ function Profile() {
 
     return (
 
-    <div className="profile-page">
+        <div className="profile-page">
 
-        <ProfileHeader />
+            <ProfileHeader />
 
-        {user && (
-            <ProfileCard user={user} />
-        )}
+            {user && (
+                <ProfileCard user={user} />
+            )}
 
-        <ProfileTabs />
+            <ProfileTabs />
 
-        {user && (
-            <ProfileWatchlist
-                userId={user.id}
-            />
-        )}
+            {user && (
+                <ProfileWatchlist
+                    userId={user.id}
+                />
+            )}
 
-    </div>
+        </div>
 
-);
+    );
 
 }
 

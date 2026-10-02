@@ -1573,8 +1573,9 @@ app.post("/login", async (req, res) => {
                     username: user.username,
                     name: user.name,
                     email: user.email,
+                    profileImage: user.profileImage,
                     role: "user",
-                },
+                }
             });
         }
 
