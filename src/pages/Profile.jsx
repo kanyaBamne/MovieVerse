@@ -5,10 +5,14 @@ import ProfileHeader from "./ProfileHeader";
 import ProfileCard from "../components/ProfileCard";
 import ProfileTabs from "../components/ProfileTabs";
 import ProfileWatchlist from "../components/ProfileWatchlist";
+import ProfileWatchedMovies from "../components/ProfileWatchedMovies";
+import ProfileReviews from "../components/ProfileReviews";
 
 function Profile() {
 
     const [user, setUser] = useState(null);
+
+    const [activeTab, setActiveTab] = useState("Films");
 
     const [loading, setLoading] = useState(true);
 
@@ -130,14 +134,26 @@ function Profile() {
                 <ProfileCard user={user} />
             )}
 
-            <ProfileTabs />
+            <ProfileTabs
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+            />
 
-            {user && (
-                <ProfileWatchlist
+            {user && activeTab === "Films" && (
+                <ProfileWatchedMovies
                     userId={user.id}
                 />
             )}
 
+            {user && activeTab === "Reviews" && (
+    <ProfileReviews userId={user.id} />
+)}
+
+            {user && activeTab === "Watchlist" && (
+                <ProfileWatchlist
+                    userId={user.id}
+                />
+            )}
         </div>
 
     );

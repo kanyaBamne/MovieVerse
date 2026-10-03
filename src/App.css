@@ -639,7 +639,7 @@ button {
     margin-bottom: 28px;
 }
 
-.section-heading > span {
+.section-heading>span {
     font-size: 13px;
     font-weight: 600;
 
@@ -1206,7 +1206,7 @@ button {
     text-align: center;
 }
 
-.empty-state > span {
+.empty-state>span {
     font-size: 28px;
 
     margin-bottom: 12px;
@@ -1533,7 +1533,7 @@ button {
     flex-shrink: 0;
 }
 
-.user-table-info > div:last-child {
+.user-table-info>div:last-child {
     display: flex;
     flex-direction: column;
 
@@ -2293,10 +2293,8 @@ button {
 
     color: white;
 
-    background: linear-gradient(
-        transparent,
-        rgba(0, 0, 0, 0.95)
-    );
+    background: linear-gradient(transparent,
+            rgba(0, 0, 0, 0.95));
 
     transform: translateY(100%);
 
@@ -2962,6 +2960,7 @@ button {
     }
 
 }
+
 /* =========================================
    PROFILE COVER
 ========================================= */
@@ -3375,11 +3374,9 @@ button {
 
 
     background:
-        linear-gradient(
-            to bottom,
+        linear-gradient(to bottom,
             rgba(96, 95, 95, 0.05),
-            rgba(96, 95, 95, 0.55)
-        ),
+            rgba(96, 95, 95, 0.55)),
         #C3C3C3;
 
 
@@ -3970,27 +3967,27 @@ button {
 @media (max-width: 500px) {
 
 
-.about-page .about-banner {
-    min-height: 430px;
-    position: relative;
+    .about-page .about-banner {
+        min-height: 430px;
+        position: relative;
 
 
-    display: flex;
-    align-items: flex-end;
+        display: flex;
+        align-items: flex-end;
 
 
-    padding: 60px;
-    margin: 0 0 80px;
+        padding: 60px;
+        margin: 0 0 80px;
 
 
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-size: contain;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-size: contain;
 
 
-    overflow: hidden;
-}
+        overflow: hidden;
+    }
 
 
     .about-page .about-banner h1 {
@@ -4028,7 +4025,7 @@ button {
     }
 
 
-     .about-page .feature-content {
+    .about-page .feature-content {
         left: 24px;
         right: 24px;
         bottom: 24px;
@@ -4069,11 +4066,9 @@ button {
 
 
     background:
-        linear-gradient(
-            to bottom,
+        linear-gradient(to bottom,
             rgba(96, 95, 95, 0.05),
-            rgba(96, 95, 95, 0.55)
-        ),
+            rgba(96, 95, 95, 0.55)),
         #C3C3C3;
 
 
@@ -4664,27 +4659,27 @@ button {
 @media (max-width: 500px) {
 
 
-.about-page .about-banner {
-    min-height: 430px;
-    position: relative;
+    .about-page .about-banner {
+        min-height: 430px;
+        position: relative;
 
 
-    display: flex;
-    align-items: flex-end;
+        display: flex;
+        align-items: flex-end;
 
 
-    padding: 60px;
-    margin: 0 0 80px;
+        padding: 60px;
+        margin: 0 0 80px;
 
 
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-size: contain;
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-size: contain;
 
 
-    overflow: hidden;
-}
+        overflow: hidden;
+    }
 
 
     .about-page .about-banner h1 {
@@ -4722,7 +4717,7 @@ button {
     }
 
 
-     .about-page .feature-content {
+    .about-page .feature-content {
         left: 24px;
         right: 24px;
         bottom: 24px;
@@ -4772,7 +4767,7 @@ button {
     margin-top: 42px;
 }
 
-.about-strip-cta > span {
+.about-strip-cta>span {
     font-size: 28px;
     font-weight: 400;
 
@@ -5123,7 +5118,7 @@ button {
     cursor: pointer;
 }
 
-.movie-checkbox input:checked + span {
+.movie-checkbox input:checked+span {
     font-weight: 600;
 
     color: #333333;
@@ -5458,4 +5453,379 @@ button {
     }
 
 }
+
+
+/* ========================================= PROFILE WATCHED MOVIES ========================================= */
+.profile-watched-movies {
+    width: 90%;
+    max-width: 1150px;
+    margin: 35px auto 60px;
+}
+
+/* Header / Movie count */
+.watched-movies-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.watched-movies-header span {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #777;
+}
+
+/* Movie grid */
+.watched-movies-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 24px;
+}
+
+
+/* Movie card */
+
+.watched-movie {
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.watched-movie:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+/* Poster */
+.watched-movie-poster {
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #eeeeee;
+}
+
+.watched-movie-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Movie information */
+.watched-movie-info {
+    padding: 14px;
+}
+
+.watched-movie-info h3 {
+    margin: 0 0 6px;
+    font-size: 17px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.watched-movie-info p {
+    margin: 0 0 14px;
+    font-size: 14px;
+    color: #777;
+}
+
+/* Remove button */
+.watched-movie-info button {
+    margin-top: 2px;
+    border: 1px solid #222;
+    background: transparent;
+    color: #222;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.watched-movie-info button:hover {
+    background: #222;
+    color: #ffffff;
+}
+
+/* Empty state */
+.empty-watched-movies {
+    padding: 50px 20px;
+    text-align: center;
+    background: #f1f1ed;
+    border-radius: 12px;
+    color: #777;
+}
+
+.empty-watched-movies h3 {
+    margin: 0 0 8px;
+}
+
+.empty-watched-movies p {
+    margin: 0;
+    color: #777;
+}
+
+/* Loading */
+.watched-movies-loading {
+    width: 90%;
+    max-width: 1150px;
+    margin: 35px auto 60px;
+    color: #777;
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .watched-movies-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 750px) {
+    .watched-movies-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 550px) {
+    .watched-movies-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+  
+
+    .watched-movie-poster {
+        height: 260px;
+    }
+}
+
+
+
+/* =========================================
+   PROFILE REVIEWS
+========================================= */
+
+.profile-reviews-section {
+    width: 90%;
+    max-width: 1150px;
+    margin: 35px auto 60px;
+}
+
+
+/* Header */
+
+.profile-reviews-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.profile-reviews-header h2 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.profile-reviews-header span {
+    font-size: 14px;
+    color: #777;
+}
+
+
+/* Reviews list */
+
+.profile-reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+
+/* Review card */
+
+.profile-review-card {
+    display: flex;
+    gap: 22px;
+    padding: 18px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #eeeeee;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-review-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.10);
+}
+
+
+/* Movie poster */
+
+.profile-review-poster {
+    width: 110px;
+    height: 165px;
+    flex-shrink: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #eeeeee;
+}
+
+.profile-review-poster img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+
+/* Review content */
+
+.profile-review-content {
+    flex: 1;
+    padding: 3px 4px;
+}
+
+
+/* Movie information */
+
+.profile-review-movie h3 {
+    margin: 0 0 5px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.profile-review-movie p {
+    margin: 0;
+    font-size: 14px;
+    color: #777;
+}
+
+
+/* Rating */
+
+.profile-review-rating {
+    margin-top: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #7F8D72;
+}
+
+.profile-review-rating span {
+    margin-left: 4px;
+    font-size: 13px;
+    color: #777;
+    font-weight: 500;
+}
+
+
+/* Review title */
+
+.profile-review-content h4 {
+    margin: 15px 0 7px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+
+/* Review text */
+
+.profile-review-text {
+    max-width: 850px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #555;
+}
+
+
+/* Date */
+
+.profile-review-date {
+    margin: 14px 0 0;
+    font-size: 12px;
+    color: #999;
+}
+
+
+/* Empty state */
+
+.profile-reviews-empty {
+    padding: 50px 20px;
+    text-align: center;
+    background: #f1f1ed;
+    border-radius: 12px;
+}
+
+.profile-reviews-empty h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+}
+
+.profile-reviews-empty p {
+    margin: 0;
+    font-size: 14px;
+    color: #777;
+}
+
+
+/* Loading */
+
+.profile-reviews-loading {
+    width: 90%;
+    max-width: 1150px;
+    margin: 35px auto 60px;
+    color: #777;
+}
+
+
+/* Responsive */
+
+@media (max-width: 600px) {
+
+    .profile-review-card {
+        gap: 15px;
+        padding: 14px;
+    }
+
+    .profile-review-poster {
+        width: 85px;
+        height: 128px;
+    }
+
+    .profile-review-movie h3 {
+        font-size: 17px;
+    }
+
+    .profile-review-text {
+        font-size: 13px;
+    }
+
+}
+
+.profile-review-delete {
+    margin-top: 12px;
+    border: 1px solid #222;
+    background: transparent;
+    color: #222;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.profile-review-delete:hover {
+    background: #222;
+    color: #ffffff;
+}
+
 

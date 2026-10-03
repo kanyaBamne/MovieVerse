@@ -802,6 +802,272 @@ app.get("/reviews/movie/:movieId", async (req, res) => {
 
 });
 
+/* ==================================================
+   GET REVIEWS BY USER
+================================================== */
+
+app.get("/reviews/user/:userId", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId } = req.params;
+
+
+        const reviews = await db
+            .collection("reviews")
+            .aggregate([
+
+                // Only reviews written by this user
+                {
+                    $match: {
+                        userId:
+                            new mongoose.Types.ObjectId(userId)
+                    }
+                },
+
+                // Get movie information
+                {
+                    $lookup: {
+                        from: "movie",
+                        localField: "movieId",
+                        foreignField: "_id",
+                        as: "movie"
+                    }
+                },
+
+                // Convert movie array into object
+                {
+                    $unwind: {
+                        path: "$movie",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+
+                // Latest reviews first
+                {
+                    $sort: {
+                        createdAt: -1
+                    }
+                }
+
+            ])
+            .toArray();
+
+
+        // Convert into frontend-friendly data
+        const formattedReviews = reviews.map((review) => {
+
+            return {
+
+                id: review._id.toString(),
+
+                reviewTitle:
+                    review.reviewTitle || "",
+
+                reviewText:
+                    review.reviewText || "",
+
+                rating:
+                    review.rating || 0,
+
+                likesCount:
+                    review.likesCount || 0,
+
+                createdAt:
+                    review.createdAt || "",
+
+                movie: {
+
+                    id: review.movie?._id
+                        ? review.movie._id.toString()
+                        : "",
+
+                    title:
+                        review.movie?.Title || "",
+
+                    poster:
+                        review.movie?.Poster || "",
+
+                    year:
+                        review.movie?.Year || ""
+
+                }
+
+            };
+
+        });
+
+
+        res.json({
+
+            success: true,
+
+            reviews: formattedReviews
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "User reviews error:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to load user reviews"
+
+        });
+
+    }
+
+});
+
+// ==================================================
+// ADD REVIEW
+// ==================================================
+
+app.post("/reviews", async (req, res) => {
+
+ console.log("POST /reviews HIT");
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const {
+            userId,
+            movieId,
+            rating,
+            reviewTitle,
+            reviewText
+        } = req.body;
+
+        // Check required data
+        if (!userId || !movieId || !rating) {
+
+            return res.status(400).json({
+                success: false,
+                message: "User, movie and rating are required"
+            });
+
+        }
+
+        // Create review
+        const newReview = {
+
+            userId:
+                new mongoose.Types.ObjectId(userId),
+
+            movieId:
+                new mongoose.Types.ObjectId(movieId),
+
+            rating: Number(rating),
+
+            reviewTitle:
+                reviewTitle || "",
+
+            reviewText:
+                reviewText || "",
+
+            likesCount: 0,
+
+            createdAt: new Date(),
+
+            updatedAt: new Date()
+
+        };
+
+        // Insert into reviews collection
+        const result = await db
+            .collection("reviews")
+            .insertOne(newReview);
+
+        res.status(201).json({
+
+            success: true,
+
+            message: "Review added successfully",
+
+            reviewId: result.insertedId
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Add review error:",
+            error
+        );
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to add review"
+
+        });
+
+    }
+
+});
+
+/* ==================================================
+   DELETE USER REVIEW
+================================================== */
+
+app.delete("/reviews/:reviewId", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { reviewId } = req.params;
+
+        const result = await db
+            .collection("reviews")
+            .deleteOne({
+                _id: new mongoose.Types.ObjectId(reviewId)
+            });
+
+
+        if (result.deletedCount === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Review not found"
+            });
+
+        }
+
+
+        res.json({
+            success: true,
+            message: "Review deleted successfully"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Delete review error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete review"
+        });
+
+    }
+
+});
+
 
 // ==================================================
 // GET TOP LISTS
@@ -1115,11 +1381,12 @@ app.post("/watchlist", async (req, res) => {
     }
 
 });
+
 // ==================================================
-// GET USER WATCHLIST
+// GET USER WATCHED MOVIES
 // ==================================================
 
-app.get("/watchlist/:userId", async (req, res) => {
+app.get("/watchedMovies/:userId", async (req, res) => {
 
     try {
 
@@ -1128,8 +1395,8 @@ app.get("/watchlist/:userId", async (req, res) => {
         const { userId } = req.params;
 
 
-        const watchlist = await db
-            .collection("watchlists")
+        const watchedMovies = await db
+            .collection("watchedMovies")
             .aggregate([
 
                 {
@@ -1165,7 +1432,7 @@ app.get("/watchlist/:userId", async (req, res) => {
                 {
                     $sort: {
 
-                        addedAt: -1
+                        watchedAt: -1
 
                     }
 
@@ -1179,7 +1446,7 @@ app.get("/watchlist/:userId", async (req, res) => {
 
             success: true,
 
-            watchlist: watchlist
+            watchedMovies: watchedMovies
 
         });
 
@@ -1187,7 +1454,7 @@ app.get("/watchlist/:userId", async (req, res) => {
     } catch (error) {
 
         console.error(
-            "Watchlist fetch error:",
+            "Watched movies fetch error:",
             error
         );
 
@@ -1196,13 +1463,181 @@ app.get("/watchlist/:userId", async (req, res) => {
 
             success: false,
 
-            message: "Failed to fetch watchlist"
+            message: "Failed to fetch watched movies"
 
         });
 
     }
 
 });
+
+// ==================================================
+// ADD MOVIE TO WATCHED MOVIES
+// ==================================================
+
+app.post("/watchedMovies", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId, movieId } = req.body;
+
+
+        // Check required data
+
+        if (!userId || !movieId) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "userId and movieId are required"
+
+            });
+
+        }
+
+
+        // Check if movie is already marked as watched
+
+        const existingMovie = await db
+            .collection("watchedMovies")
+            .findOne({
+
+                userId: new mongoose.Types.ObjectId(userId),
+
+                movieId: new mongoose.Types.ObjectId(movieId)
+
+            });
+
+
+        if (existingMovie) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "Movie is already marked as watched"
+
+            });
+
+        }
+
+
+        // Add movie
+
+        const result = await db
+            .collection("watchedMovies")
+            .insertOne({
+
+                userId: new mongoose.Types.ObjectId(userId),
+
+                movieId: new mongoose.Types.ObjectId(movieId),
+
+                watchedAt: new Date(),
+
+                rewatched: false,
+
+                watchCount: 1
+
+            });
+
+
+        res.json({
+
+            success: true,
+
+            message: "Movie marked as watched",
+
+            watchedMovieId: result.insertedId
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Add watched movie error:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to mark movie as watched"
+
+        });
+
+    }
+
+});
+
+
+// ==================================================
+// REMOVE MOVIE FROM WATCHED MOVIES
+// ==================================================
+
+app.delete("/watchedMovies", async (req, res) => {
+
+    console.log("DELETE /watchedMovies HIT");
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId, movieId } = req.body;
+
+        // Check required data
+        if (!userId || !movieId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "userId and movieId are required"
+            });
+
+        }
+
+        // Remove watched movie
+        const result = await db
+            .collection("watchedMovies")
+            .deleteOne({
+                userId: new mongoose.Types.ObjectId(userId),
+                movieId: new mongoose.Types.ObjectId(movieId)
+            });
+
+        if (result.deletedCount === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Movie is not in watched movies"
+            });
+
+        }
+
+        res.json({
+            success: true,
+            message: "Movie removed from watched movies"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Remove watched movie error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to remove movie from watched movies"
+        });
+
+    }
+
+});
+
 
 // ==================================================
 // GET USERS
@@ -1844,6 +2279,7 @@ app.get("/top-reviews", async (req, res) => {
         });
     }
 });
+
 
 
 // ==================================================

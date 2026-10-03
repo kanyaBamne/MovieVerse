@@ -1,9 +1,5 @@
-import { useState } from "react";
 
-function ProfileTabs() {
-
-    const [activeTab, setActiveTab] = useState("Films");
-
+function ProfileTabs({ activeTab, setActiveTab }) {
 
     const tabs = [
         "Films",
@@ -12,7 +8,6 @@ function ProfileTabs() {
         "Watchlist",
         "Lists"
     ];
-
 
     return (
 
@@ -29,9 +24,7 @@ function ProfileTabs() {
                     }
                     onClick={() => setActiveTab(tab)}
                 >
-
                     {tab}
-
                 </button>
 
             ))}
@@ -39,7 +32,7 @@ function ProfileTabs() {
         </div>
 
     );
-
 }
 
 export default ProfileTabs;
+
