@@ -1,9 +1,8 @@
 import { useState } from "react";
 
-function ProfileTabs() {
+function ProfileTabs({ onTabChange }) {
 
     const [activeTab, setActiveTab] = useState("Films");
-
 
     const tabs = [
         "Films",
@@ -13,6 +12,15 @@ function ProfileTabs() {
         "Lists"
     ];
 
+    const handleTabChange = (tab) => {
+
+        setActiveTab(tab);
+
+        if (onTabChange) {
+            onTabChange(tab);
+        }
+
+    };
 
     return (
 
@@ -27,7 +35,7 @@ function ProfileTabs() {
                             ? "profile-tab active"
                             : "profile-tab"
                     }
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => handleTabChange(tab)}
                 >
 
                     {tab}

@@ -8,6 +8,8 @@ function MovieDetail() {
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
     const [reviews, setReviews] = useState([]);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [favoriteLoading, setFavoriteLoading] = useState(false);  
 
     useEffect(() => {
         fetch(`http://localhost:5000/movies/${id}`)
@@ -46,6 +48,109 @@ function MovieDetail() {
             setReviews([]);
         });
 }, [id]);
+
+    useEffect(() => {
+        const user = JSON.parse(sessionStorage.getItem("user"));
+
+        if (!user || !user.id) {
+            return;
+        }
+
+        fetch(`http://localhost:5000/favorites/${user.id}`)
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error("Failed to load favorites");
+                }
+
+                return res.json();
+            })
+            .then((data) => {
+
+                const favorites = data.favorites || [];
+
+                const alreadyFavorite = favorites.some(
+                    (favorite) =>
+                        favorite.movieId === id ||
+                        favorite.movieId?._id === id ||
+                        favorite.movie?._id === id
+                );
+
+                setIsFavorite(alreadyFavorite);
+            })
+            .catch((error) => {
+                console.error("Error loading favorites:", error);
+            });
+
+    }, [id]);
+
+    const handleFavorite = async () => {
+
+        const user = JSON.parse(sessionStorage.getItem("user"));
+
+        if (!user || !user.id) {
+            alert("Please sign in to add favorites.");
+            return;
+        }
+
+        setFavoriteLoading(true);
+
+        try {
+
+            if (!isFavorite) {
+
+                const response = await fetch(
+                    "http://localhost:5000/favorites",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            userId: user.id,
+                            movieId: id
+                        })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to add favorite");
+                }
+
+                setIsFavorite(true);
+
+            } else {
+
+                const response = await fetch(
+                    `http://localhost:5000/favorites/${user.id}/${id}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message || "Failed to remove favorite"
+                    );
+                }
+
+                setIsFavorite(false);
+            }
+
+        } catch (error) {
+
+            console.error("Favorite error:", error);
+            alert(error.message);
+
+        } finally {
+
+            setFavoriteLoading(false);
+
+        }
+    };
 
     if (loading) {
         return (
@@ -200,8 +305,12 @@ function MovieDetail() {
                                 ✓ Watched
                             </button>
 
-                            <button className="movie-action-btn secondary">
-                                ♡ Favourite
+                            <button
+                                className="movie-action-btn secondary"
+                                onClick={handleFavorite}
+                                disabled={favoriteLoading}
+                            >
+                                {isFavorite ? "♥ Favorited" : "♡ Favourite"}
                             </button>
 
                             <button className="movie-action-btn secondary">

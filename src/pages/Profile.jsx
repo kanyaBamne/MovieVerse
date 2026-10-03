@@ -5,6 +5,7 @@ import ProfileHeader from "./ProfileHeader";
 import ProfileCard from "../components/ProfileCard";
 import ProfileTabs from "../components/ProfileTabs";
 import ProfileWatchlist from "../components/ProfileWatchlist";
+import ProfileFavorites from "../components/ProfileFavorites";
 
 function Profile() {
 
@@ -14,6 +15,8 @@ function Profile() {
 
     const [error, setError] = useState("");
 
+    const [activeTab, setActiveTab] = useState("Films");
+
 
     useEffect(() => {
 
@@ -21,13 +24,14 @@ function Profile() {
 
             try {
 
-                // Get the currently logged-in user
                 const loggedInUser =
                     JSON.parse(sessionStorage.getItem("user"));
 
                 if (!loggedInUser || !loggedInUser.id) {
 
-                    setError("Please sign in to view your profile.");
+                    setError(
+                        "Please sign in to view your profile."
+                    );
 
                     setLoading(false);
 
@@ -37,11 +41,9 @@ function Profile() {
 
                 const userId = loggedInUser.id;
 
-
                 const response = await fetch(
                     `http://localhost:5000/profile/${userId}`
                 );
-
 
                 if (!response.ok) {
 
@@ -51,9 +53,7 @@ function Profile() {
 
                 }
 
-
                 const data = await response.json();
-
 
                 setUser(data.user);
 
@@ -80,41 +80,28 @@ function Profile() {
 
         };
 
-
         fetchProfile();
 
     }, []);
 
 
-    // Loading
-
     if (loading) {
 
         return (
-
             <div className="profile-loading">
-
                 Loading profile...
-
             </div>
-
         );
 
     }
 
 
-    // Error
-
     if (error) {
 
         return (
-
             <div className="profile-error">
-
                 {error}
-
             </div>
-
         );
 
     }
@@ -130,12 +117,26 @@ function Profile() {
                 <ProfileCard user={user} />
             )}
 
-            <ProfileTabs />
+            <ProfileTabs
+                onTabChange={setActiveTab}
+            />
 
-            {user && (
+
+            {user && activeTab === "Films" && (
+
                 <ProfileWatchlist
                     userId={user.id}
                 />
+
+            )}
+
+
+            {user && activeTab === "Favourites" && (
+
+                <ProfileFavorites
+                    userId={user.id}
+                />
+
             )}
 
         </div>
@@ -143,6 +144,5 @@ function Profile() {
     );
 
 }
-
 
 export default Profile;

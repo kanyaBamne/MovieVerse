@@ -1204,6 +1204,164 @@ app.get("/watchlist/:userId", async (req, res) => {
 
 });
 
+app.post("/favorites", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId, movieId } = req.body;
+
+        if (!userId || !movieId) {
+            return res.status(400).json({
+                success: false,
+                message: "userId and movieId are required"
+            });
+        }
+
+        const existingFavorite = await db
+            .collection("favorites")
+            .findOne({
+                userId: new mongoose.Types.ObjectId(userId),
+                movieId: new mongoose.Types.ObjectId(movieId)
+            });
+
+        if (existingFavorite) {
+            return res.status(400).json({
+                success: false,
+                message: "Movie is already in favorites"
+            });
+        }
+
+        await db.collection("favorites").insertOne({
+            userId: new mongoose.Types.ObjectId(userId),
+            movieId: new mongoose.Types.ObjectId(movieId),
+            addedAt: new Date()
+        });
+
+        res.json({
+            success: true,
+            message: "Movie added to favorites"
+        });
+
+    } catch (error) {
+
+        console.error("Add favorite error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to add favorite"
+        });
+
+    }
+
+});
+
+app.get("/favorites/:userId", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId } = req.params;
+
+        const favorites = await db
+            .collection("favorites")
+            .aggregate([
+
+                {
+                    $match: {
+                        userId:
+                            new mongoose.Types.ObjectId(userId)
+                    }
+                },
+
+                {
+                    $lookup: {
+                        from: "movie",
+                        localField: "movieId",
+                        foreignField: "_id",
+                        as: "movie"
+                    }
+                },
+
+                {
+                    $unwind: "$movie"
+                },
+
+                {
+                    $sort: {
+                        addedAt: -1
+                    }
+                }
+
+            ])
+            .toArray();
+
+        res.json({
+            success: true,
+            favorites: favorites
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Favorites fetch error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch favorites"
+        });
+
+    }
+
+});
+
+app.delete("/favorites/:userId/:movieId", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId, movieId } = req.params;
+
+        const result = await db
+            .collection("favorites")
+            .deleteOne({
+                userId: new mongoose.Types.ObjectId(userId),
+                movieId: new mongoose.Types.ObjectId(movieId)
+            });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Movie not found in favorites"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "Movie removed from favorites"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Remove favorite error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to remove favorite"
+        });
+
+    }
+
+});
+
 // ==================================================
 // GET USERS
 // ==================================================
