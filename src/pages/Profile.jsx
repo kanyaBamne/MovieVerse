@@ -1,12 +1,20 @@
+
 import { useEffect, useState } from "react";
 
 import ProfileHeader from "./ProfileHeader";
 
 import ProfileCard from "../components/ProfileCard";
+
 import ProfileTabs from "../components/ProfileTabs";
+
 import ProfileWatchlist from "../components/ProfileWatchlist";
+
 import ProfileWatchedMovies from "../components/ProfileWatchedMovies";
+
 import ProfileReviews from "../components/ProfileReviews";
+
+import ProfileFavorites from "../components/ProfileFavorites";
+
 
 function Profile() {
 
@@ -25,19 +33,21 @@ function Profile() {
 
             try {
 
-                // Get the currently logged-in user
                 const loggedInUser =
                     JSON.parse(sessionStorage.getItem("user"));
 
                 if (!loggedInUser || !loggedInUser.id) {
 
-                    setError("Please sign in to view your profile.");
+                    setError(
+                        "Please sign in to view your profile."
+                    );
 
                     setLoading(false);
 
                     return;
 
                 }
+
 
                 const userId = loggedInUser.id;
 
@@ -57,7 +67,6 @@ function Profile() {
 
 
                 const data = await response.json();
-
 
                 setUser(data.user);
 
@@ -90,35 +99,23 @@ function Profile() {
     }, []);
 
 
-    // Loading
-
     if (loading) {
 
         return (
-
             <div className="profile-loading">
-
                 Loading profile...
-
             </div>
-
         );
 
     }
 
 
-    // Error
-
     if (error) {
 
         return (
-
             <div className="profile-error">
-
                 {error}
-
             </div>
-
         );
 
     }
@@ -130,30 +127,53 @@ function Profile() {
 
             <ProfileHeader />
 
+
             {user && (
                 <ProfileCard user={user} />
             )}
+
 
             <ProfileTabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
             />
 
+
             {user && activeTab === "Films" && (
+
                 <ProfileWatchedMovies
                     userId={user.id}
                 />
+
             )}
 
+
+            {user && activeTab === "Favourites" && (
+
+                <ProfileFavorites
+                    userId={user.id}
+                />
+
+            )}
+
+
             {user && activeTab === "Reviews" && (
-    <ProfileReviews userId={user.id} />
-)}
+
+                <ProfileReviews
+                    userId={user.id}
+                />
+
+            )}
+
 
             {user && activeTab === "Watchlist" && (
+
                 <ProfileWatchlist
                     userId={user.id}
                 />
+
             )}
+
         </div>
 
     );
@@ -162,3 +182,4 @@ function Profile() {
 
 
 export default Profile;
+

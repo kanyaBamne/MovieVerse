@@ -80,14 +80,14 @@ function TopReviews() {
 
                                 <div className="top-review-profile-image">
                                     {topMovie.review?.profileImage ? (
-                                        <img
+                                       <img
                                             src={
-                                                topMovie.review
-                                                    .profileImage
+                                                topMovie.review.profileImage.startsWith("http")
+                                                    ? topMovie.review.profileImage
+                                                    : `http://localhost:5000${topMovie.review.profileImage}`
                                             }
                                             alt={
-                                                topMovie.review
-                                                    .userName ||
+                                                topMovie.review.userName ||
                                                 "Reviewer"
                                             }
                                         />
@@ -226,7 +226,9 @@ function TopReviews() {
                                     {reviewer.profileImage ? (
                                         <img
                                             src={
-                                                reviewer.profileImage
+                                                reviewer.profileImage.startsWith("http")
+                                                    ? reviewer.profileImage
+                                                    : `http://localhost:5000${reviewer.profileImage}`
                                             }
                                             alt={
                                                 reviewer.name ||

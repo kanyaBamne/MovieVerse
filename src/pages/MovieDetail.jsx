@@ -4,12 +4,17 @@ import { useParams } from "react-router-dom";
 import "../MovieDetail.css";
 
 function MovieDetail() {
+
     const { id } = useParams();
 
     const [movie, setMovie] = useState(null);
     const [loading, setLoading] = useState(true);
     const [reviews, setReviews] = useState([]);
+
     const [isWatched, setIsWatched] = useState(false);
+
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [favoriteLoading, setFavoriteLoading] = useState(false);
 
     const [showReviewForm, setShowReviewForm] = useState(false);
     const [reviewRating, setReviewRating] = useState(0);
@@ -150,6 +155,7 @@ function MovieDetail() {
             if (!loggedInUser || !loggedInUser.id) {
 
                 alert("Please sign in first.");
+
                 return;
 
             }
@@ -182,6 +188,7 @@ function MovieDetail() {
                 );
 
                 return;
+
             }
 
             setIsWatched(!isWatched);
@@ -192,18 +199,18 @@ function MovieDetail() {
                     : "Movie marked as watched!"
             );
 
-        }  catch (error) {
+        } catch (error) {
 
-    console.error(
-        "Watched movie error:",
-        error
-    );
+            console.error(
+                "Watched movie error:",
+                error
+            );
 
-    alert(
-        "Error: " + error.message
-    );
+            alert(
+                "Error: " + error.message
+            );
 
-}
+        }
 
     };
 
@@ -225,6 +232,7 @@ function MovieDetail() {
                 alert("Please sign in first.");
 
                 return;
+
             }
 
             if (reviewRating === 0) {
@@ -232,6 +240,7 @@ function MovieDetail() {
                 alert("Please select a rating.");
 
                 return;
+
             }
 
             setSubmittingReview(true);
@@ -246,17 +255,11 @@ function MovieDetail() {
                     },
 
                     body: JSON.stringify({
-
                         userId: loggedInUser.id,
-
                         movieId: id,
-
                         rating: reviewRating,
-
                         reviewTitle: reviewTitle,
-
                         reviewText: reviewText
-
                     })
                 }
             );
@@ -271,17 +274,16 @@ function MovieDetail() {
                 );
 
                 return;
+
             }
 
             alert("Review added successfully!");
 
-            // Clear form
             setReviewRating(0);
             setReviewTitle("");
             setReviewText("");
-
-            // Hide form
             setShowReviewForm(false);
+
 
             // Reload reviews
             const reviewsResponse = await fetch(
@@ -309,6 +311,157 @@ function MovieDetail() {
         } finally {
 
             setSubmittingReview(false);
+
+        }
+
+    };
+
+
+    // Check whether movie is already a favorite
+    useEffect(() => {
+
+        const user =
+            JSON.parse(
+                sessionStorage.getItem("user")
+            );
+
+        if (!user || !user.id) {
+            return;
+        }
+
+        fetch(
+            `http://localhost:5000/favorites/${user.id}`
+        )
+            .then((res) => {
+
+                if (!res.ok) {
+                    throw new Error(
+                        "Failed to load favorites"
+                    );
+                }
+
+                return res.json();
+
+            })
+            .then((data) => {
+
+                const favorites =
+                    data.favorites || [];
+
+                const alreadyFavorite =
+                    favorites.some(
+                        (favorite) =>
+                            favorite.movieId === id ||
+                            favorite.movieId?._id === id ||
+                            favorite.movie?._id === id
+                    );
+
+                setIsFavorite(alreadyFavorite);
+
+            })
+            .catch((error) => {
+
+                console.error(
+                    "Error loading favorites:",
+                    error
+                );
+
+            });
+
+    }, [id]);
+
+
+    // Add or remove favorite
+    const handleFavorite = async () => {
+
+        const user =
+            JSON.parse(
+                sessionStorage.getItem("user")
+            );
+
+        if (!user || !user.id) {
+
+            alert(
+                "Please sign in to add favorites."
+            );
+
+            return;
+
+        }
+
+        setFavoriteLoading(true);
+
+        try {
+
+            if (!isFavorite) {
+
+                const response = await fetch(
+                    "http://localhost:5000/favorites",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            userId: user.id,
+                            movieId: id
+                        })
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.message ||
+                        "Failed to add favorite"
+                    );
+
+                }
+
+                setIsFavorite(true);
+
+            } else {
+
+                const response = await fetch(
+                    `http://localhost:5000/favorites/${user.id}/${id}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+                const data =
+                    await response.json();
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        data.message ||
+                        "Failed to remove favorite"
+                    );
+
+                }
+
+                setIsFavorite(false);
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Favorite error:",
+                error
+            );
+
+            alert(error.message);
+
+        } finally {
+
+            setFavoriteLoading(false);
 
         }
 
@@ -356,15 +509,16 @@ function MovieDetail() {
         <main className="movie-detail-page">
 
             {/* Breadcrumb */}
+
             <div className="movie-breadcrumb">
                 Home / Movies / {movie.title}
             </div>
 
 
             {/* Hero Section */}
+
             <section className="movie-hero">
 
-                {/* Blurred Background */}
                 <div
                     className="movie-hero-bg"
                     style={{
@@ -379,6 +533,7 @@ function MovieDetail() {
                 <div className="movie-hero-content">
 
                     {/* Poster */}
+
                     <div className="movie-poster-wrapper">
 
                         <img
@@ -391,6 +546,7 @@ function MovieDetail() {
 
 
                     {/* Movie Information */}
+
                     <div className="movie-info">
 
                         <div className="movie-top-meta">
@@ -422,6 +578,7 @@ function MovieDetail() {
 
 
                         {/* Genres */}
+
                         <div className="movie-genres">
 
                             {genres.map((genre) => (
@@ -439,12 +596,14 @@ function MovieDetail() {
 
 
                         {/* Tagline */}
+
                         <p className="movie-tagline">
                             Your next story begins here.
                         </p>
 
 
                         {/* Rating */}
+
                         <div className="movie-rating">
 
                             <span className="rating-main">
@@ -465,6 +624,7 @@ function MovieDetail() {
 
 
                         {/* Stats */}
+
                         <div className="movie-stats">
 
                             <div className="movie-stat">
@@ -496,15 +656,15 @@ function MovieDetail() {
 
 
                         {/* Description */}
-                        <p className="movie-description">
 
+                        <p className="movie-description">
                             {movie.description ||
                                 "No description available for this movie."}
-
                         </p>
 
 
                         {/* Actions */}
+
                         <div className="movie-actions">
 
                             <button
@@ -517,8 +677,14 @@ function MovieDetail() {
                             </button>
 
 
-                            <button className="movie-action-btn secondary">
-                                ♡ Favourite
+                            <button
+                                className="movie-action-btn secondary"
+                                onClick={handleFavorite}
+                                disabled={favoriteLoading}
+                            >
+                                {isFavorite
+                                    ? "♥ Favorited"
+                                    : "♡ Favourite"}
                             </button>
 
 
@@ -541,6 +707,7 @@ function MovieDetail() {
 
 
             {/* Movie Details */}
+
             <section className="movie-details-section">
 
                 <h2>Movie Details</h2>
@@ -593,11 +760,9 @@ function MovieDetail() {
                         </span>
 
                         <span className="movie-detail-value">
-
                             {movie.duration
                                 ? `${movie.duration} min`
                                 : "N/A"}
-
                         </span>
 
                     </div>
@@ -608,6 +773,7 @@ function MovieDetail() {
 
 
             {/* Cast */}
+
             {cast.length > 0 && (
 
                 <section className="movie-cast-section">
@@ -643,6 +809,7 @@ function MovieDetail() {
 
 
             {/* Reviews */}
+
             <section className="movie-reviews-section">
 
                 <div className="reviews-heading">
@@ -668,6 +835,7 @@ function MovieDetail() {
                                 );
 
                                 return;
+
                             }
 
                             setShowReviewForm(true);
@@ -691,8 +859,6 @@ function MovieDetail() {
 
                         <h3>Write a Review</h3>
 
-
-                        {/* Rating */}
 
                         <div className="review-form-group">
 
@@ -726,8 +892,6 @@ function MovieDetail() {
                         </div>
 
 
-                        {/* Review Title */}
-
                         <div className="review-form-group">
 
                             <label htmlFor="reviewTitle">
@@ -749,8 +913,6 @@ function MovieDetail() {
                         </div>
 
 
-                        {/* Review Text */}
-
                         <div className="review-form-group">
 
                             <label htmlFor="reviewText">
@@ -771,8 +933,6 @@ function MovieDetail() {
 
                         </div>
 
-
-                        {/* Form Buttons */}
 
                         <div className="review-form-actions">
 
@@ -895,6 +1055,7 @@ function MovieDetail() {
 
 
             {/* Bottom Strip */}
+
             <section className="movie-bottom-strip">
 
                 <div className="movie-bottom-line"></div>
@@ -902,7 +1063,9 @@ function MovieDetail() {
             </section>
 
         </main>
+
     );
+
 }
 
 export default MovieDetail;

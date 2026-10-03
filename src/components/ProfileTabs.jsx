@@ -9,6 +9,7 @@ function ProfileTabs({ activeTab, setActiveTab }) {
         "Lists"
     ];
 
+
     return (
 
         <div className="profile-tabs">
@@ -32,7 +33,9 @@ function ProfileTabs({ activeTab, setActiveTab }) {
         </div>
 
     );
+
 }
+
 
 export default ProfileTabs;
 
