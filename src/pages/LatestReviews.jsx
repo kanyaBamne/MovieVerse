@@ -6,16 +6,13 @@ function LatestReviews() {
     const navigate = useNavigate();
 
     const [reviews, setReviews] = useState([]);
-
     const [loading, setLoading] = useState(true);
-
     const [error, setError] = useState("");
 
     const reviewContainer = useRef(null);
 
-
     // ==========================================
-    // FETCH REVIEWS
+    // FETCH LATEST REVIEWS
     // ==========================================
 
     const fetchReviews = async () => {
@@ -23,7 +20,6 @@ function LatestReviews() {
         try {
 
             setLoading(true);
-
             setError("");
 
             const response = await fetch(
@@ -42,11 +38,11 @@ function LatestReviews() {
 
             setReviews(data.reviews || []);
 
-        } catch (err) {
+        } catch (error) {
 
             console.error(
                 "Reviews error:",
-                err
+                error
             );
 
             setError(
@@ -63,7 +59,6 @@ function LatestReviews() {
 
     };
 
-
     // ==========================================
     // LOAD REVIEWS
     // ==========================================
@@ -74,7 +69,6 @@ function LatestReviews() {
 
     }, []);
 
-
     // ==========================================
     // AUTO SCROLL
     // ==========================================
@@ -82,28 +76,19 @@ function LatestReviews() {
     useEffect(() => {
 
         if (reviews.length === 0) {
-
             return;
-
         }
 
         const container =
             reviewContainer.current;
 
         if (!container) {
-
             return;
-
         }
-
 
         const scrollReviews = () => {
 
             container.scrollLeft += 1;
-
-
-            // When it reaches the end,
-            // start again from the beginning
 
             if (
                 container.scrollLeft +
@@ -117,12 +102,10 @@ function LatestReviews() {
 
         };
 
-
         const interval = setInterval(
             scrollReviews,
             30
         );
-
 
         return () => {
 
@@ -132,46 +115,82 @@ function LatestReviews() {
 
     }, [reviews]);
 
-
     // ==========================================
-    // ADD TO WATCHLIST
+    // ADD MOVIE TO WATCHLIST
     // ==========================================
 
-    const addToWatchlist = async (
-        userId,
-        movieId
-    ) => {
-
-        console.log(
-            "Sending to backend:"
-        );
-
-        console.log(
-            "userId:",
-            userId
-        );
-
-        console.log(
-            "movieId:",
-            movieId
-        );
-
-
-        // Check IDs
-
-        if (!userId || !movieId) {
-
-            alert(
-                "User ID or Movie ID is missing"
-            );
-
-            return;
-
-        }
-
+    const addToWatchlist = async (movieId) => {
 
         try {
 
+            // Get logged-in user
+            const storedUser =
+                sessionStorage.getItem("user");
+
+            // User not logged in
+            if (!storedUser) {
+
+                alert(
+                    "Please login first."
+                );
+
+                navigate("/login");
+
+                return;
+
+            }
+
+            // Get user data
+            const loggedInUser =
+                JSON.parse(storedUser);
+
+            // Login response uses "id"
+            const userId =
+                loggedInUser.id ||
+                loggedInUser._id;
+
+            console.log(
+                "========== ADD TO WATCHLIST =========="
+            );
+
+            console.log(
+                "Logged-in User:",
+                loggedInUser
+            );
+
+            console.log(
+                "Logged-in User ID:",
+                userId
+            );
+
+            console.log(
+                "Movie ID:",
+                movieId
+            );
+
+            // Check user ID
+            if (!userId) {
+
+                alert(
+                    "Logged-in user ID is missing."
+                );
+
+                return;
+
+            }
+
+            // Check movie ID
+            if (!movieId) {
+
+                alert(
+                    "Movie ID is missing."
+                );
+
+                return;
+
+            }
+
+            // Send to backend
             const response = await fetch(
                 "http://localhost:5000/watchlist",
                 {
@@ -194,16 +213,13 @@ function LatestReviews() {
                 }
             );
 
-
             const data =
                 await response.json();
 
-
             console.log(
-                "Backend response:",
+                "Watchlist backend response:",
                 data
             );
-
 
             if (data.success) {
 
@@ -214,7 +230,8 @@ function LatestReviews() {
             } else {
 
                 alert(
-                    data.message
+                    data.message ||
+                    "Failed to add movie to watchlist."
                 );
 
             }
@@ -227,13 +244,12 @@ function LatestReviews() {
             );
 
             alert(
-                "Something went wrong"
+                "Something went wrong while adding the movie."
             );
 
         }
 
     };
-
 
     // ==========================================
     // RETURN
@@ -243,13 +259,11 @@ function LatestReviews() {
 
         <div className="latest-reviews-box">
 
-
             {/* TITLE */}
 
             <h2>
                 Latest Reviews
             </h2>
-
 
             {/* LOADING */}
 
@@ -263,7 +277,6 @@ function LatestReviews() {
 
             )}
 
-
             {/* ERROR */}
 
             {error && (
@@ -276,92 +289,114 @@ function LatestReviews() {
 
             )}
 
+            {/* EMPTY */}
 
-            {/* REVIEWS */}
+            {!loading &&
+                !error &&
+                reviews.length === 0 && (
 
-            {!loading && !error && reviews.length === 0 && (
+                    <div className="latest-reviews-empty">
 
-                <div className="latest-reviews-empty">
-                    No latest reviews available yet.
-                </div>
-
-            )}
-
-            {!loading && !error && reviews.length > 0 && (
-
-                <div
-                    className="latest-review-container"
-                    ref={reviewContainer}
-                >
-
-                    <div className="latest-review-items">
-
-                        {reviews.map((review) => (
-
-                            <div
-                                className="review-card"
-                                key={review.id}
-                            >
-
-                                <img
-                                    src={review.movie.poster}
-                                    alt={review.movie.title}
-                                    onClick={() =>
-                                        navigate(
-                                            `/movies/${review.movie.id}`
-                                        )
-                                    }
-                                    style={{ cursor: "pointer" }}
-                                />
-
-                                <div className="review-hover-details">
-
-                                    <h3>
-                                        {review.movie.title}
-                                    </h3>
-
-                                    <p className="review-title">
-                                        {review.reviewTitle}
-                                    </p>
-
-                                    <p className="review-rating">
-                                        ⭐ {review.rating}
-                                    </p>
-
-                                    <p className="review-user">
-                                        @{review.user.username}
-                                    </p>
-
-                                    <button
-                                        className="watchlist-button"
-                                        onClick={() => {
-                                            addToWatchlist(
-                                                review.user.id,
-                                                review.movie.id
-                                            );
-                                        }}
-                                    >
-                                        + Add to Watchlist
-                                    </button>
-
-                                </div>
-
-                            </div>
-
-                        ))}
+                        No latest reviews available yet.
 
                     </div>
 
-                </div>
+                )}
 
-)}
+            {/* REVIEWS */}
 
+            {!loading &&
+                !error &&
+                reviews.length > 0 && (
+
+                    <div
+                        className="latest-review-container"
+                        ref={reviewContainer}
+                    >
+
+                        <div className="latest-review-items">
+
+                            {reviews.map((review) => (
+
+                                <div
+                                    className="review-card"
+                                    key={review.id}
+                                >
+
+                                    {/* MOVIE POSTER */}
+
+                                    <img
+                                        src={review.movie.poster}
+                                        alt={review.movie.title}
+                                        onClick={() =>
+                                            navigate(
+                                                `/movies/${review.movie.id}`
+                                            )
+                                        }
+                                        style={{
+                                            cursor: "pointer"
+                                        }}
+                                        onError={(e) => {
+
+                                            e.target.src =
+                                                "https://via.placeholder.com/150x220?text=No+Poster";
+
+                                        }}
+                                    />
+
+                                    {/* HOVER DETAILS */}
+
+                                    <div className="review-hover-details">
+
+                                        <h3>
+                                            {review.movie.title}
+                                        </h3>
+
+                                        <p className="review-title">
+                                            {review.reviewTitle}
+                                        </p>
+
+                                        <p className="review-rating">
+                                            ⭐ {review.rating}
+                                        </p>
+
+                                        <p className="review-user">
+                                            @{review.user.username}
+                                        </p>
+
+                                        {/* ADD TO WATCHLIST */}
+
+                                        <button
+                                            className="watchlist-button"
+                                            onClick={(e) => {
+
+                                                e.stopPropagation();
+
+                                                addToWatchlist(
+                                                    review.movie.id
+                                                );
+
+                                            }}
+                                        >
+                                            + Add to Watchlist
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            ))}
+
+                        </div>
+
+                    </div>
+
+                )}
 
         </div>
 
     );
 
 }
-
 
 export default LatestReviews;

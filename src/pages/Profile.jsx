@@ -5,7 +5,10 @@ import ProfileHeader from "./ProfileHeader";
 import ProfileCard from "../components/ProfileCard";
 import ProfileTabs from "../components/ProfileTabs";
 import ProfileWatchlist from "../components/ProfileWatchlist";
+import ProfileWatchedMovies from "../components/ProfileWatchedMovies";
+import ProfileReviews from "../components/ProfileReviews";
 import ProfileFavorites from "../components/ProfileFavorites";
+import ProfileLists from "../components/ProfileLists";
 import Footer from "../components/Footer";
 
 function Profile() {
@@ -31,7 +34,7 @@ function Profile() {
                 if (!loggedInUser || !loggedInUser.id) {
 
                     setError(
-                        "Please sign in to view your profile."
+                        "Please signin to view your profile."
                     );
 
                     setLoading(false);
@@ -58,9 +61,7 @@ function Profile() {
 
                 setUser(data.user);
 
-            }
-
-            catch (error) {
+            } catch (error) {
 
                 console.error(
                     "Profile error:",
@@ -71,9 +72,7 @@ function Profile() {
                     "Unable to load profile"
                 );
 
-            }
-
-            finally {
+            } finally {
 
                 setLoading(false);
 
@@ -119,18 +118,24 @@ function Profile() {
             )}
 
             <ProfileTabs
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
                 onTabChange={setActiveTab}
             />
 
 
+            {/* Films */}
+
             {user && activeTab === "Films" && (
 
-                <ProfileWatchlist
+                <ProfileWatchedMovies
                     userId={user.id}
                 />
 
             )}
 
+
+            {/* Favourites */}
 
             {user && activeTab === "Favourites" && (
 
@@ -140,7 +145,38 @@ function Profile() {
 
             )}
 
-            <Footer/>
+
+            {/* Reviews */}
+
+            {user && activeTab === "Reviews" && (
+
+                <ProfileReviews
+                    userId={user.id}
+                />
+
+            )}
+
+
+            {/* Watchlist */}
+
+            {user && activeTab === "Watchlist" && (
+
+                <ProfileWatchlist
+                    userId={user.id}
+                />
+
+            )}
+
+
+            {/* Lists */}
+
+            {user && activeTab === "Lists" && (
+
+                <ProfileLists />
+
+            )}
+
+            <Footer />
 
         </div>
 
