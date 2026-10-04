@@ -1,5 +1,6 @@
 import bannerImage from "../assets/banner.jpg";
 import UserNavbar from "../components/UserNavbar";
+import Footer from "../components/Footer";
 
 
 
@@ -130,6 +131,8 @@ function AboutUs() {
 
 
             </section>
+
+            <Footer/>
 
 
         </main>

@@ -17,50 +17,74 @@ import MovieDetail from "./pages/MovieDetail";
 import MovieLibrary from "./components/MovieLibrary";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
+    return (
+        <BrowserRouter>
+            <Routes>
 
-        {/* Login page */}
-        <Route path="/login" element={<Login />} />
-        {/* Registration page */}
-        <Route path="/register" element={<Register />} />
+                {/* User authentication */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/movie-roulette" element={<MovieRoulette />} />
-          <Route path="/movies" element={<MovieLibrary />} />
-          <Route path="/movies/:id" element={<MovieDetail />} />
-
-
-        {/* Admin pages */}
-        <Route
-          path="/admin/*"
-          element={
-            <Layout>
-              <Routes>
-                <Route path="" element={<Dashboard />} />
-                <Route path="movies" element={<Movies />} />
-                <Route path="movies/add" element={<AddMovie />} />
-                <Route path="movies/edit/:id" element={<EditMovie />} />
-                <Route path="users" element={<Users />} />
-              </Routes>
-            </Layout>
-          }
-        />
-
-         <Route
-                    path="/"
-                    element={<Home />}
+                {/* User pages */}
+                <Route path="/" element={<Home />} />
+                <Route path="/about" element={<AboutUs />} />
+                <Route
+                    path="/movie-roulette"
+                    element={<MovieRoulette />}
+                />
+                <Route
+                    path="/movies"
+                    element={<MovieLibrary />}
+                />
+                <Route
+                    path="/movies/:id"
+                    element={<MovieDetail />}
+                />
+                <Route
+                    path="/profile"
+                    element={<Profile />}
                 />
 
-        <Route path="/profile"element={<Profile />}/>
-        {/* Unknown URL → Login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+                {/* Admin pages */}
+                <Route
+                    path="/admin/*"
+                    element={
+                        <Layout>
+                            <Routes>
+                                <Route
+                                    path=""
+                                    element={<Dashboard />}
+                                />
+                                <Route
+                                    path="movies"
+                                    element={<Movies />}
+                                />
+                                <Route
+                                    path="movies/add"
+                                    element={<AddMovie />}
+                                />
+                                <Route
+                                    path="movies/edit/:id"
+                                    element={<EditMovie />}
+                                />
+                                <Route
+                                    path="users"
+                                    element={<Users />}
+                                />
+                            </Routes>
+                        </Layout>
+                    }
+                />
 
-      </Routes>
-    </BrowserRouter>
-  );
+                {/* Unknown URL → Login */}
+                <Route
+                    path="*"
+                    element={<Navigate to="/login" replace />}
+                />
+
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;

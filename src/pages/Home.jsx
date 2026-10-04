@@ -6,6 +6,7 @@ import Hero from "../components/Hero";
 import TrendingThisWeek from "../components/TrendingThisWeek";
 import TopReviews from "./TopReviews";
 import AboutUsStrip from "../components/AboutUsStrip";
+import Footer from "../components/Footer";
 import "../UserHome.css";
 
 function Home() {
@@ -30,6 +31,8 @@ function Home() {
             <TopLists />
 
             <TopReviews />
+
+            <Footer/>
 
         </div>
     );

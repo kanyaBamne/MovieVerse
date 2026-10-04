@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import "../MovieRoulette.css";
+import Footer from "../components/Footer";
 
 
 function MovieRoulette() {
@@ -106,6 +107,7 @@ function MovieRoulette() {
     }
 
     return (
+        <>
         <div className="roulette-page">
 
             {/* Header */}
@@ -268,7 +270,12 @@ function MovieRoulette() {
                 </div>
             )}
 
+            
+
         </div>
+        <Footer/>
+        
+        </>
     );
 }
 

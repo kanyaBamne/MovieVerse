@@ -6,6 +6,7 @@ function UserNavbar() {
     const navigate = useNavigate();
 
     const [showMenu, setShowMenu] = useState(false);
+    const [search, setSearch] = useState("");
 
     const user = JSON.parse(
         sessionStorage.getItem("user")
@@ -19,6 +20,24 @@ function UserNavbar() {
         setShowMenu(false);
 
         navigate("/login");
+    };
+
+    const handleSearch = (e) => {
+
+        if (e.key === "Enter") {
+
+            const searchValue = search.trim();
+
+            if (!searchValue) {
+                return;
+            }
+
+            navigate(
+                `/movies?search=${encodeURIComponent(searchValue)}`
+            );
+
+        }
+
     };
 
     return (
@@ -35,12 +54,20 @@ function UserNavbar() {
                 </Link>
 
                 <div className="user-navbar-search">
+
                     <span>⌕</span>
 
                     <input
                         type="text"
                         aria-label="Search"
+                        placeholder="Search movies..."
+                        value={search}
+                        onChange={(e) =>
+                            setSearch(e.target.value)
+                        }
+                        onKeyDown={handleSearch}
                     />
+
                 </div>
 
                 <Link to="/movie-roulette">
@@ -54,6 +81,7 @@ function UserNavbar() {
                 {!user ? (
 
                     <>
+
                         <Link
                             to="/login"
                             className="nav-pill"
@@ -67,6 +95,7 @@ function UserNavbar() {
                         >
                             Join
                         </Link>
+
                     </>
 
                 ) : (

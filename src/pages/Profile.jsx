@@ -6,6 +6,7 @@ import ProfileCard from "../components/ProfileCard";
 import ProfileTabs from "../components/ProfileTabs";
 import ProfileWatchlist from "../components/ProfileWatchlist";
 import ProfileFavorites from "../components/ProfileFavorites";
+import Footer from "../components/Footer";
 
 function Profile() {
 
@@ -138,6 +139,8 @@ function Profile() {
                 />
 
             )}
+
+            <Footer/>
 
         </div>
 

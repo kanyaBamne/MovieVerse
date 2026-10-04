@@ -279,7 +279,15 @@ function LatestReviews() {
 
             {/* REVIEWS */}
 
-            {!loading && !error && (
+            {!loading && !error && reviews.length === 0 && (
+
+                <div className="latest-reviews-empty">
+                    No latest reviews available yet.
+                </div>
+
+            )}
+
+            {!loading && !error && reviews.length > 0 && (
 
                 <div
                     className="latest-review-container"
@@ -288,130 +296,65 @@ function LatestReviews() {
 
                     <div className="latest-review-items">
 
+                        {reviews.map((review) => (
 
-                        {reviews.map(
-                            (review) => (
+                            <div
+                                className="review-card"
+                                key={review.id}
+                            >
 
-                                <div
-                                    className="review-card"
-                                    key={review.id}
-                                >
+                                <img
+                                    src={review.movie.poster}
+                                    alt={review.movie.title}
+                                    onClick={() =>
+                                        navigate(
+                                            `/movies/${review.movie.id}`
+                                        )
+                                    }
+                                    style={{ cursor: "pointer" }}
+                                />
 
+                                <div className="review-hover-details">
 
-                                    {/* POSTER */}
-<img
-    src={review.movie.poster}
-    alt={review.movie.title}
-    onClick={() => navigate(`/movies/${review.movie.id}`)}
-    style={{ cursor: "pointer" }}
-    onError={(e) => {
-        e.target.src =
-            "https://via.placeholder.com/150x220?text=No+Poster";
-    }}
-/>
+                                    <h3>
+                                        {review.movie.title}
+                                    </h3>
 
+                                    <p className="review-title">
+                                        {review.reviewTitle}
+                                    </p>
 
-                                    {/* HOVER DETAILS */}
+                                    <p className="review-rating">
+                                        ⭐ {review.rating}
+                                    </p>
 
-                                    <div className="review-hover-details">
+                                    <p className="review-user">
+                                        @{review.user.username}
+                                    </p>
 
-
-                                        {/* MOVIE TITLE */}
-
-                                        <h3>
-
-                                            {
-                                                review.movie.title
-                                            }
-
-                                        </h3>
-
-
-                                        {/* REVIEW TITLE */}
-
-                                        <p className="review-title">
-
-                                            {
-                                                review.reviewTitle
-                                            }
-
-                                        </p>
-
-
-                                        {/* RATING */}
-
-                                        <p className="review-rating">
-
-                                            ⭐ {review.rating}
-
-                                        </p>
-
-
-                                        {/* USERNAME */}
-
-                                        <p className="review-user">
-
-                                            @
-                                            {
-                                                review.user.username
-                                            }
-
-                                        </p>
-
-
-                                        {/* WATCHLIST BUTTON */}
-
-                                        <button
-                                            className="watchlist-button"
-
-                                            onClick={() => {
-
-                                                console.log(
-                                                    "Review data:",
-                                                    review
-                                                );
-
-                                                console.log(
-                                                    "User ID:",
-                                                    review.user.id
-                                                );
-
-                                                console.log(
-                                                    "Movie ID:",
-                                                    review.movie.id
-                                                );
-
-
-                                                addToWatchlist(
-
-                                                    review.user.id,
-
-                                                    review.movie.id
-
-                                                );
-
-                                            }}
-                                        >
-
-                                            + Add to Watchlist
-
-                                        </button>
-
-
-                                    </div>
-
+                                    <button
+                                        className="watchlist-button"
+                                        onClick={() => {
+                                            addToWatchlist(
+                                                review.user.id,
+                                                review.movie.id
+                                            );
+                                        }}
+                                    >
+                                        + Add to Watchlist
+                                    </button>
 
                                 </div>
 
-                            )
-                        )}
+                            </div>
 
+                        ))}
 
                     </div>
 
                 </div>
 
-            )}
+)}
 
 
         </div>

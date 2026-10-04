@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams  } from "react-router-dom";
+import Footer from "./Footer";
+import "../UserHome.css";
 
 function MovieLibrary() {
 
     const navigate = useNavigate();
+
+    const [searchParams] = useSearchParams();
 
     const [movies, setMovies] = useState([]);
     const [search, setSearch] = useState("");
@@ -12,7 +16,7 @@ function MovieLibrary() {
 
     useEffect(() => {
 
-        fetch("http://localhost:5000/movies?limit=100")
+        fetch("http://localhost:5000/movies?limit=8000")
             .then((res) => res.json())
             .then((data) => {
                 setMovies(data.movies || []);
@@ -22,6 +26,15 @@ function MovieLibrary() {
             });
 
     }, []);
+
+    useEffect(() => {
+
+        const searchFromUrl =
+            searchParams.get("search") || "";
+
+        setSearch(searchFromUrl);
+
+    }, [searchParams]);
 
     const genres = [
         ...new Set(
@@ -92,6 +105,7 @@ function MovieLibrary() {
     });
 
     return (
+        <>
         <main className="movie-library">
 
             <section className="movie-library-header">
@@ -293,6 +307,9 @@ function MovieLibrary() {
             </div>
 
         </main>
+        
+        <Footer/>
+        </>
     );
 }
 

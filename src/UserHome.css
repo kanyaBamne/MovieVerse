@@ -1613,3 +1613,127 @@
 .user-profile-dropdown button:hover {
     background: #f5f2eb;
 }
+
+
+.site-footer {
+    background: #e9e8e0;
+    color: #242520;
+    padding: 50px 7% 20px;
+    margin-top: 50px;
+    font-family: inherit;
+}
+
+.footer-main {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1.4fr;
+    gap: 40px;
+    padding-bottom: 35px;
+}
+
+.footer-logo {
+    display: inline-block;
+    font-size: 28px;
+    font-weight: 800;
+    text-decoration: none;
+    color: #242520;
+    letter-spacing: -1px;
+    margin-bottom: 14px;
+}
+
+.footer-logo span {
+    color: #8a7255;
+}
+
+.footer-brand p,
+.footer-about p {
+    max-width: 280px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #64645d;
+    margin: 0;
+}
+
+.footer-links,
+.footer-about {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.footer-links h3,
+.footer-about h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 5px 0 18px;
+}
+
+.footer-links a {
+    color: #64645d;
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 12px;
+    transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+    color: #8a7255;
+}
+
+.footer-bottom {
+    border-top: 1px solid #cfcec5;
+    padding-top: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.footer-bottom p {
+    color: #77776f;
+    font-size: 12px;
+    margin: 0;
+}
+
+.footer-tagline {
+    font-style: italic;
+}
+
+@media (max-width: 900px) {
+    .footer-main {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+}
+
+@media (max-width: 500px) {
+    .site-footer {
+        padding: 35px 6% 18px;
+    }
+
+    .footer-main {
+        grid-template-columns: 1fr 1fr;
+        gap: 25px 18px;
+    }
+
+    .footer-logo {
+        font-size: 24px;
+    }
+
+    .footer-brand p,
+    .footer-about p {
+        font-size: 13px;
+    }
+
+    .footer-bottom {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+.latest-reviews-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: #777;
+    font-size: 16px;
+}

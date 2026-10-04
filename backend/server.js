@@ -577,20 +577,9 @@ app.get("/reviews/latest", async (req, res) => {
 
         const db = mongoose.connection.db;
 
-        // Get latest reviews from MongoDB
         const reviews = await db
             .collection("reviews")
             .aggregate([
-
-                // Get user information
-                {
-                    $lookup: {
-                        from: "user",
-                        localField: "userId",
-                        foreignField: "_id",
-                        as: "user"
-                    }
-                },
 
                 // Get movie information
                 {
@@ -602,6 +591,22 @@ app.get("/reviews/latest", async (req, res) => {
                     }
                 },
 
+                // IMPORTANT:
+                // Remove reviews whose movie no longer exists
+                {
+                    $unwind: "$movie"
+                },
+
+                // Get user information
+                {
+                    $lookup: {
+                        from: "user",
+                        localField: "userId",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+
                 // Latest reviews first
                 {
                     $sort: {
@@ -609,7 +614,7 @@ app.get("/reviews/latest", async (req, res) => {
                     }
                 },
 
-                // Only get latest 10 reviews
+                // Only get latest 10 valid reviews
                 {
                     $limit: 10
                 }
@@ -622,7 +627,7 @@ app.get("/reviews/latest", async (req, res) => {
         const formattedReviews = reviews.map((review) => {
 
             const user = review.user[0] || {};
-            const movie = review.movie[0] || {};
+            const movie = review.movie || {};
 
             return {
 
@@ -677,7 +682,10 @@ app.get("/reviews/latest", async (req, res) => {
 
     } catch (error) {
 
-        console.error("Latest reviews error:", error);
+        console.error(
+            "Latest reviews error:",
+            error
+        );
 
         res.status(500).json({
             success: false,
@@ -1764,25 +1772,49 @@ app.post("/login", async (req, res) => {
 
 app.get("/top-reviews", async (req, res) => {
     try {
+
         const db = mongoose.connection.db;
 
-        // =========================
+
+        // ==================================================
         // TOP REVIEWED MOVIES
-        // =========================
+        // ==================================================
 
         const topReviewedMovies = await db
             .collection("reviews")
             .aggregate([
 
-                // Count reviews for each movie
+                // Get movie information
+                {
+                    $lookup: {
+                        from: "movie",
+                        localField: "movieId",
+                        foreignField: "_id",
+                        as: "movie"
+                    }
+                },
+
+                // IMPORTANT:
+                // Remove reviews whose movie was deleted
+                {
+                    $unwind: "$movie"
+                },
+
+                // Count reviews for each existing movie
                 {
                     $group: {
                         _id: "$movieId",
+
                         reviewCount: {
                             $sum: 1
                         },
+
                         averageRating: {
                             $avg: "$rating"
+                        },
+
+                        movie: {
+                            $first: "$movie"
                         }
                     }
                 },
@@ -1794,35 +1826,20 @@ app.get("/top-reviews", async (req, res) => {
                     }
                 },
 
-                // Show top 5 movies
+                // Show top movie
                 {
                     $limit: 1
-                },
-
-                // Get movie details
-                {
-                    $lookup: {
-                        from: "movie",
-                        localField: "_id",
-                        foreignField: "_id",
-                        as: "movie"
-                    }
-                },
-
-                {
-                    $unwind: {
-                        path: "$movie",
-                        preserveNullAndEmptyArrays: true
-                    }
                 },
 
                 // Get one actual review for this movie
                 {
                     $lookup: {
                         from: "reviews",
+
                         let: {
                             movieId: "$_id"
                         },
+
                         pipeline: [
 
                             {
@@ -1851,8 +1868,11 @@ app.get("/top-reviews", async (req, res) => {
                             {
                                 $lookup: {
                                     from: "user",
+
                                     localField: "userId",
+
                                     foreignField: "_id",
+
                                     as: "user"
                                 }
                             },
@@ -1860,6 +1880,7 @@ app.get("/top-reviews", async (req, res) => {
                             {
                                 $unwind: {
                                     path: "$user",
+
                                     preserveNullAndEmptyArrays: true
                                 }
                             },
@@ -1867,17 +1888,25 @@ app.get("/top-reviews", async (req, res) => {
                             {
                                 $project: {
                                     _id: 0,
+
                                     reviewTitle: 1,
+
                                     reviewText: 1,
+
                                     rating: 1,
+
                                     createdAt: 1,
+
                                     userName: "$user.name",
+
                                     username: "$user.username",
+
                                     profileImage: "$user.profileImage"
                                 }
                             }
 
                         ],
+
                         as: "latestReview"
                     }
                 },
@@ -1885,25 +1914,41 @@ app.get("/top-reviews", async (req, res) => {
                 {
                     $unwind: {
                         path: "$latestReview",
+
                         preserveNullAndEmptyArrays: true
                     }
                 },
 
+
                 // Final data sent to React
-               {
+                {
                     $project: {
+
                         _id: 0,
+
                         movieId: "$_id",
+
                         title: "$movie.Title",
+
                         genre: "$movie.Genre",
+
                         year: "$movie.Year",
+
                         duration: "$movie.Duration (min)",
+
                         description: "$movie.Description",
+
                         poster: "$movie.Poster",
+
                         reviewCount: 1,
+
                         averageRating: {
-                            $round: ["$averageRating", 1]
+                            $round: [
+                                "$averageRating",
+                                1
+                            ]
                         },
+
                         review: "$latestReview"
                     }
                 }
@@ -1912,18 +1957,38 @@ app.get("/top-reviews", async (req, res) => {
             .toArray();
 
 
-        // =========================
+        // ==================================================
         // POPULAR REVIEWERS
-        // =========================
+        // ==================================================
 
         const popularReviewers = await db
             .collection("reviews")
             .aggregate([
 
-                // Count reviews written by each user
+                // Get movie information
+                {
+                    $lookup: {
+                        from: "movie",
+
+                        localField: "movieId",
+
+                        foreignField: "_id",
+
+                        as: "movie"
+                    }
+                },
+
+                // IMPORTANT:
+                // Ignore reviews belonging to deleted movies
+                {
+                    $unwind: "$movie"
+                },
+
+                // Count only reviews of existing movies
                 {
                     $group: {
                         _id: "$userId",
+
                         reviewCount: {
                             $sum: 1
                         }
@@ -1946,8 +2011,11 @@ app.get("/top-reviews", async (req, res) => {
                 {
                     $lookup: {
                         from: "user",
+
                         localField: "_id",
+
                         foreignField: "_id",
+
                         as: "user"
                     }
                 },
@@ -1955,12 +2023,14 @@ app.get("/top-reviews", async (req, res) => {
                 {
                     $unwind: {
                         path: "$user",
+
                         preserveNullAndEmptyArrays: true
                     }
                 },
 
                 {
                     $project: {
+
                         _id: 0,
 
                         userId: "$_id",
@@ -1979,15 +2049,20 @@ app.get("/top-reviews", async (req, res) => {
             .toArray();
 
 
-        // =========================
+        // ==================================================
         // RESPONSE
-        // =========================
+        // ==================================================
 
         res.json({
+
             success: true,
+
             topReviewedMovies,
+
             popularReviewers
+
         });
+
 
     } catch (error) {
 
@@ -1997,12 +2072,15 @@ app.get("/top-reviews", async (req, res) => {
         );
 
         res.status(500).json({
+
             success: false,
+
             message: "Failed to load top reviews"
+
         });
+
     }
 });
-
 
 // ==================================================
 // START SERVER

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import "../MovieDetail.css";
+import Footer from "../components/Footer";
 
 function MovieDetail() {
     const { id } = useParams();
@@ -496,6 +497,8 @@ function MovieDetail() {
             <section className="movie-bottom-strip">
                 <div className="movie-bottom-line"></div>
             </section>
+
+            <Footer/>
 
         </main>
     );
