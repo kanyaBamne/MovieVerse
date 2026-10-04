@@ -1,10 +1,9 @@
-
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "../MovieDetail.css";
 
 function MovieDetail() {
-
+    const navigate = useNavigate();
     const { id } = useParams();
 
     const [movie, setMovie] = useState(null);
@@ -22,90 +21,85 @@ function MovieDetail() {
     const [reviewText, setReviewText] = useState("");
     const [submittingReview, setSubmittingReview] = useState(false);
 
+    // ==========================================
+    // ADD TO LIST STATES
+    // ==========================================
 
-    // Load movie
+    const [showListModal, setShowListModal] = useState(false);
+    const [userLists, setUserLists] = useState([]);
+
+    // ==========================================
+    // LOAD MOVIE
+    // ==========================================
+
     useEffect(() => {
-
         fetch(`http://localhost:5000/movies/${id}`)
             .then((res) => {
-
                 if (!res.ok) {
                     throw new Error("Failed to load movie");
                 }
 
                 return res.json();
-
             })
             .then((data) => {
-
                 setMovie(data.movie);
                 setLoading(false);
-
             })
             .catch((error) => {
-
-                console.error(
-                    "Error loading movie:",
-                    error
-                );
-
+                console.error("Error loading movie:", error);
                 setLoading(false);
-
             });
-
     }, [id]);
 
+    // ==========================================
+    // LOAD REVIEWS
+    // ==========================================
 
-    // Load reviews
     useEffect(() => {
-
         fetch(`http://localhost:5000/reviews/movie/${id}`)
             .then((res) => {
-
                 if (!res.ok) {
                     throw new Error("Failed to load reviews");
                 }
 
                 return res.json();
-
             })
             .then((data) => {
-
                 setReviews(data.reviews || []);
-
             })
             .catch((error) => {
-
-                console.error(
-                    "Error loading reviews:",
-                    error
-                );
-
+                console.error("Error loading reviews:", error);
                 setReviews([]);
-
             });
-
     }, [id]);
 
+    // ==========================================
+    // CHECK WATCHED MOVIE
+    // ==========================================
 
-    // Check whether the current user has already watched this movie
     useEffect(() => {
-
         const checkWatched = async () => {
-
             try {
+                const storedUser =
+                    sessionStorage.getItem("user");
+
+                if (!storedUser) {
+                    return;
+                }
 
                 const loggedInUser =
-                    JSON.parse(
-                        sessionStorage.getItem("user")
-                    );
+                    JSON.parse(storedUser);
 
-                if (!loggedInUser || !loggedInUser.id) {
+                const userId =
+                    loggedInUser.id ||
+                    loggedInUser._id;
+
+                if (!userId) {
                     return;
                 }
 
                 const response = await fetch(
-                    `http://localhost:5000/watchedMovies/${loggedInUser.id}`
+                    `http://localhost:5000/watchedMovies/${userId}`
                 );
 
                 const data = await response.json();
@@ -125,39 +119,41 @@ function MovieDetail() {
                     );
 
                 setIsWatched(alreadyWatched);
-
             } catch (error) {
-
                 console.error(
                     "Check watched error:",
                     error
                 );
-
             }
-
         };
 
         checkWatched();
-
     }, [id]);
 
+    // ==========================================
+    // ADD / REMOVE WATCHED
+    // ==========================================
 
-    // Add or remove movie from watched
     const handleWatched = async () => {
-
         try {
+            const storedUser =
+                sessionStorage.getItem("user");
+
+            if (!storedUser) {
+                alert("Please sign in first.");
+                return;
+            }
 
             const loggedInUser =
-                JSON.parse(
-                    sessionStorage.getItem("user")
-                );
+                JSON.parse(storedUser);
 
-            if (!loggedInUser || !loggedInUser.id) {
+            const userId =
+                loggedInUser.id ||
+                loggedInUser._id;
 
-                alert("Please sign in first.");
-
+            if (!userId) {
+                alert("User ID not found. Please login again.");
                 return;
-
             }
 
             const response = await fetch(
@@ -168,11 +164,12 @@ function MovieDetail() {
                         : "POST",
 
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json"
                     },
 
                     body: JSON.stringify({
-                        userId: loggedInUser.id,
+                        userId: userId,
                         movieId: id
                     })
                 }
@@ -181,14 +178,11 @@ function MovieDetail() {
             const data = await response.json();
 
             if (!response.ok) {
-
                 alert(
                     data.message ||
                     "Something went wrong."
                 );
-
                 return;
-
             }
 
             setIsWatched(!isWatched);
@@ -198,49 +192,288 @@ function MovieDetail() {
                     ? "Movie removed from watched!"
                     : "Movie marked as watched!"
             );
-
         } catch (error) {
-
             console.error(
                 "Watched movie error:",
                 error
             );
 
             alert(
-                "Error: " + error.message
+                "Error: " +
+                error.message
             );
-
         }
-
     };
 
+    // ==========================================
+    // ADD TO WATCHLIST
+    // ==========================================
 
-    // Submit review
+    const handleWatchlist = async () => {
+        try {
+            const storedUser =
+                sessionStorage.getItem("user");
+
+            if (!storedUser) {
+                alert("Please sign in first.");
+                return;
+            }
+
+            const loggedInUser =
+                JSON.parse(storedUser);
+
+            const userId =
+                loggedInUser.id ||
+                loggedInUser._id;
+
+            if (!userId) {
+                alert(
+                    "User ID not found. Please login again."
+                );
+                return;
+            }
+
+            const response = await fetch(
+                "http://localhost:5000/watchlist",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        userId: userId,
+                        movieId: id
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            // ==================================
+            // ALREADY IN WATCHLIST
+            // ==================================
+
+            if (
+                !response.ok &&
+                data.message ===
+                    "Movie is already in watchlist"
+            ) {
+                alert(
+                    "Movie is already in your watchlist."
+                );
+
+                navigate(
+                    "/profile?tab=watchlist"
+                );
+
+                return;
+            }
+
+            // ==================================
+            // OTHER ERROR
+            // ==================================
+
+            if (!response.ok) {
+                alert(
+                    data.message ||
+                    "Failed to add movie to watchlist."
+                );
+
+                return;
+            }
+
+            // ==================================
+            // SUCCESS
+            // ==================================
+
+            alert(
+                "Movie added to your watchlist!"
+            );
+
+            navigate(
+                "/profile?tab=watchlist"
+            );
+        } catch (error) {
+            console.error(
+                "Watchlist error:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "Failed to add movie to watchlist."
+            );
+        }
+    };
+
+    // ==========================================
+    // OPEN ADD TO LIST MODAL
+    // ==========================================
+
+    const handleOpenListModal = async () => {
+        try {
+            const storedUser =
+                sessionStorage.getItem("user");
+
+            if (!storedUser) {
+                alert("Please sign in first.");
+                return;
+            }
+
+            const loggedInUser =
+                JSON.parse(storedUser);
+
+            const userId =
+                loggedInUser.id ||
+                loggedInUser._id;
+
+            if (!userId) {
+                alert(
+                    "User ID not found. Please login again."
+                );
+                return;
+            }
+
+            const response = await fetch(
+                `http://localhost:5000/userlists/${userId}`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message ||
+                    "Failed to load lists"
+                );
+            }
+
+            setUserLists(data.lists || []);
+            setShowListModal(true);
+        } catch (error) {
+            console.error(
+                "Load lists error:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "Failed to load your lists."
+            );
+        }
+    };
+
+    // ==========================================
+    // ADD MOVIE TO LIST
+    // ==========================================
+
+    const handleAddToList = async (listId) => {
+        try {
+            const storedUser =
+                sessionStorage.getItem("user");
+
+            if (!storedUser) {
+                alert("Please sign in first.");
+                return;
+            }
+
+            const loggedInUser =
+                JSON.parse(storedUser);
+
+            const userId =
+                loggedInUser.id ||
+                loggedInUser._id;
+
+            if (!userId) {
+                alert(
+                    "User ID not found. Please login again."
+                );
+                return;
+            }
+
+            const response = await fetch(
+                `http://localhost:5000/userlists/${listId}/movies`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        userId: userId,
+                        movieId: id
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(
+                    data.message ||
+                    "Failed to add movie to list."
+                );
+
+                return;
+            }
+
+            alert(
+                "Movie added to your list!"
+            );
+
+            setShowListModal(false);
+        } catch (error) {
+            console.error(
+                "Add to list error:",
+                error
+            );
+
+            alert(
+                error.message ||
+                "Failed to add movie to list."
+            );
+        }
+    };
+
+    // ==========================================
+    // SUBMIT REVIEW
+    // ==========================================
+
     const handleSubmitReview = async (e) => {
-
         e.preventDefault();
 
         try {
+            const storedUser =
+                sessionStorage.getItem("user");
+
+            if (!storedUser) {
+                alert("Please sign in first.");
+                return;
+            }
 
             const loggedInUser =
-                JSON.parse(
-                    sessionStorage.getItem("user")
+                JSON.parse(storedUser);
+
+            const userId =
+                loggedInUser.id ||
+                loggedInUser._id;
+
+            if (!userId) {
+                alert(
+                    "User ID not found. Please login again."
                 );
-
-            if (!loggedInUser || !loggedInUser.id) {
-
-                alert("Please sign in first.");
-
                 return;
-
             }
 
             if (reviewRating === 0) {
-
-                alert("Please select a rating.");
-
+                alert(
+                    "Please select a rating."
+                );
                 return;
-
             }
 
             setSubmittingReview(true);
@@ -251,11 +484,12 @@ function MovieDetail() {
                     method: "POST",
 
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json"
                     },
 
                     body: JSON.stringify({
-                        userId: loggedInUser.id,
+                        userId: userId,
                         movieId: id,
                         rating: reviewRating,
                         reviewTitle: reviewTitle,
@@ -267,28 +501,28 @@ function MovieDetail() {
             const data = await response.json();
 
             if (!response.ok) {
-
                 alert(
                     data.message ||
                     "Failed to add review"
                 );
 
                 return;
-
             }
 
-            alert("Review added successfully!");
+            alert(
+                "Review added successfully!"
+            );
 
             setReviewRating(0);
             setReviewTitle("");
             setReviewText("");
             setShowReviewForm(false);
 
-
             // Reload reviews
-            const reviewsResponse = await fetch(
-                `http://localhost:5000/reviews/movie/${id}`
-            );
+            const reviewsResponse =
+                await fetch(
+                    `http://localhost:5000/reviews/movie/${id}`
+                );
 
             const reviewsData =
                 await reviewsResponse.json();
@@ -296,9 +530,7 @@ function MovieDetail() {
             setReviews(
                 reviewsData.reviews || []
             );
-
         } catch (error) {
-
             console.error(
                 "Submit review error:",
                 error
@@ -307,43 +539,48 @@ function MovieDetail() {
             alert(
                 "Unable to submit review."
             );
-
         } finally {
-
             setSubmittingReview(false);
-
         }
-
     };
 
+    // ==========================================
+    // CHECK FAVORITE
+    // ==========================================
 
-    // Check whether movie is already a favorite
     useEffect(() => {
+        const checkFavorite = async () => {
+            try {
+                const storedUser =
+                    sessionStorage.getItem("user");
 
-        const user =
-            JSON.parse(
-                sessionStorage.getItem("user")
-            );
+                if (!storedUser) {
+                    return;
+                }
 
-        if (!user || !user.id) {
-            return;
-        }
+                const user =
+                    JSON.parse(storedUser);
 
-        fetch(
-            `http://localhost:5000/favorites/${user.id}`
-        )
-            .then((res) => {
+                const userId =
+                    user.id ||
+                    user._id;
 
-                if (!res.ok) {
+                if (!userId) {
+                    return;
+                }
+
+                const response = await fetch(
+                    `http://localhost:5000/favorites/${userId}`
+                );
+
+                if (!response.ok) {
                     throw new Error(
                         "Failed to load favorites"
                     );
                 }
 
-                return res.json();
-
-            })
-            .then((data) => {
+                const data =
+                    await response.json();
 
                 const favorites =
                     data.favorites || [];
@@ -351,171 +588,176 @@ function MovieDetail() {
                 const alreadyFavorite =
                     favorites.some(
                         (favorite) =>
-                            favorite.movieId === id ||
-                            favorite.movieId?._id === id ||
-                            favorite.movie?._id === id
+                            favorite.movieId?.toString() === id ||
+                            favorite.movieId?._id?.toString() === id ||
+                            favorite.movie?._id?.toString() === id
                     );
 
-                setIsFavorite(alreadyFavorite);
-
-            })
-            .catch((error) => {
-
+                setIsFavorite(
+                    alreadyFavorite
+                );
+            } catch (error) {
                 console.error(
                     "Error loading favorites:",
                     error
                 );
+            }
+        };
 
-            });
-
+        checkFavorite();
     }, [id]);
 
+    // ==========================================
+    // ADD / REMOVE FAVORITE
+    // ==========================================
 
-    // Add or remove favorite
     const handleFavorite = async () => {
+        const storedUser =
+            sessionStorage.getItem("user");
 
-        const user =
-            JSON.parse(
-                sessionStorage.getItem("user")
-            );
-
-        if (!user || !user.id) {
-
+        if (!storedUser) {
             alert(
                 "Please sign in to add favorites."
             );
 
             return;
+        }
 
+        const user =
+            JSON.parse(storedUser);
+
+        const userId =
+            user.id ||
+            user._id;
+
+        if (!userId) {
+            alert(
+                "User ID not found. Please login again."
+            );
+
+            return;
         }
 
         setFavoriteLoading(true);
 
         try {
-
             if (!isFavorite) {
+                // ADD FAVORITE
 
-                const response = await fetch(
-                    "http://localhost:5000/favorites",
-                    {
-                        method: "POST",
+                const response =
+                    await fetch(
+                        "http://localhost:5000/favorites",
+                        {
+                            method: "POST",
 
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
 
-                        body: JSON.stringify({
-                            userId: user.id,
-                            movieId: id
-                        })
-                    }
-                );
+                            body: JSON.stringify({
+                                userId: userId,
+                                movieId: id
+                            })
+                        }
+                    );
 
                 const data =
                     await response.json();
 
                 if (!response.ok) {
-
                     throw new Error(
                         data.message ||
                         "Failed to add favorite"
                     );
-
                 }
 
                 setIsFavorite(true);
-
             } else {
+                // REMOVE FAVORITE
 
-                const response = await fetch(
-                    `http://localhost:5000/favorites/${user.id}/${id}`,
-                    {
-                        method: "DELETE"
-                    }
-                );
+                const response =
+                    await fetch(
+                        `http://localhost:5000/favorites/${userId}/${id}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
 
                 const data =
                     await response.json();
 
                 if (!response.ok) {
-
                     throw new Error(
                         data.message ||
                         "Failed to remove favorite"
                     );
-
                 }
 
                 setIsFavorite(false);
-
             }
-
         } catch (error) {
-
             console.error(
                 "Favorite error:",
                 error
             );
 
             alert(error.message);
-
         } finally {
-
             setFavoriteLoading(false);
-
         }
-
     };
 
+    // ==========================================
+    // LOADING
+    // ==========================================
 
     if (loading) {
-
         return (
             <div className="movie-loading">
                 Loading movie...
             </div>
         );
-
     }
 
+    // ==========================================
+    // MOVIE NOT FOUND
+    // ==========================================
 
     if (!movie) {
-
         return (
             <div className="movie-error">
                 Movie not found.
             </div>
         );
-
     }
-
 
     const genres = movie.genre
         ? movie.genre
-            .split(",")
-            .map((genre) => genre.trim())
+              .split(",")
+              .map((genre) => genre.trim())
         : [];
-
 
     const cast = movie.cast
         ? movie.cast
-            .split(",")
-            .map((actor) => actor.trim())
+              .split(",")
+              .map((actor) => actor.trim())
         : [];
 
-
     return (
-
         <main className="movie-detail-page">
 
-            {/* Breadcrumb */}
+            {/* =====================================
+                BREADCRUMB
+            ====================================== */}
 
             <div className="movie-breadcrumb">
                 Home / Movies / {movie.title}
             </div>
 
-
-            {/* Hero Section */}
+            {/* =====================================
+                HERO SECTION
+            ====================================== */}
 
             <section className="movie-hero">
 
@@ -525,27 +767,23 @@ function MovieDetail() {
                         backgroundImage:
                             `url(${movie.poster})`
                     }}
-                ></div>
+                />
 
-                <div className="movie-hero-overlay"></div>
-
+                <div className="movie-hero-overlay" />
 
                 <div className="movie-hero-content">
 
-                    {/* Poster */}
+                    {/* POSTER */}
 
                     <div className="movie-poster-wrapper">
-
                         <img
                             src={movie.poster}
                             alt={movie.title}
                             className="movie-poster"
                         />
-
                     </div>
 
-
-                    {/* Movie Information */}
+                    {/* MOVIE INFORMATION */}
 
                     <div className="movie-info">
 
@@ -571,49 +809,39 @@ function MovieDetail() {
 
                         </div>
 
-
                         <h1 className="movie-title">
                             {movie.title}
                         </h1>
 
-
-                        {/* Genres */}
+                        {/* GENRES */}
 
                         <div className="movie-genres">
-
                             {genres.map((genre) => (
-
                                 <span
                                     className="genre-pill"
                                     key={genre}
                                 >
                                     {genre}
                                 </span>
-
                             ))}
-
                         </div>
 
-
-                        {/* Tagline */}
+                        {/* TAGLINE */}
 
                         <p className="movie-tagline">
                             Your next story begins here.
                         </p>
 
-
-                        {/* Rating */}
+                        {/* RATING */}
 
                         <div className="movie-rating">
 
                             <span className="rating-main">
-
                                 <span className="rating-star">
                                     ★
                                 </span>
 
                                 {movie.rating || "N/A"}
-
                             </span>
 
                             <span className="rating-label">
@@ -622,8 +850,7 @@ function MovieDetail() {
 
                         </div>
 
-
-                        {/* Stats */}
+                        {/* STATS */}
 
                         <div className="movie-stats">
 
@@ -639,7 +866,6 @@ function MovieDetail() {
 
                             </div>
 
-
                             <div className="movie-stat">
 
                                 <span className="movie-stat-label">
@@ -654,18 +880,18 @@ function MovieDetail() {
 
                         </div>
 
-
-                        {/* Description */}
+                        {/* DESCRIPTION */}
 
                         <p className="movie-description">
                             {movie.description ||
                                 "No description available for this movie."}
                         </p>
 
-
-                        {/* Actions */}
+                        {/* ACTIONS */}
 
                         <div className="movie-actions">
+
+                            {/* WATCHED */}
 
                             <button
                                 className="movie-action-btn primary"
@@ -676,6 +902,7 @@ function MovieDetail() {
                                     : "Mark as Watched"}
                             </button>
 
+                            {/* FAVORITE */}
 
                             <button
                                 className="movie-action-btn secondary"
@@ -687,13 +914,21 @@ function MovieDetail() {
                                     : "♡ Favourite"}
                             </button>
 
+                            {/* WATCHLIST */}
 
-                            <button className="movie-action-btn secondary">
+                            <button
+                                className="movie-action-btn secondary"
+                                onClick={handleWatchlist}
+                            >
                                 + Watchlist
                             </button>
 
+                            {/* ADD TO LIST */}
 
-                            <button className="movie-action-btn secondary">
+                            <button
+                                className="movie-action-btn secondary"
+                                onClick={handleOpenListModal}
+                            >
                                 + Add to List
                             </button>
 
@@ -705,12 +940,15 @@ function MovieDetail() {
 
             </section>
 
-
-            {/* Movie Details */}
+            {/* =====================================
+                MOVIE DETAILS
+            ====================================== */}
 
             <section className="movie-details-section">
 
-                <h2>Movie Details</h2>
+                <h2>
+                    Movie Details
+                </h2>
 
                 <div className="movie-details-grid">
 
@@ -726,7 +964,6 @@ function MovieDetail() {
 
                     </div>
 
-
                     <div className="movie-detail-item">
 
                         <span className="movie-detail-label">
@@ -739,7 +976,6 @@ function MovieDetail() {
 
                     </div>
 
-
                     <div className="movie-detail-item">
 
                         <span className="movie-detail-label">
@@ -751,7 +987,6 @@ function MovieDetail() {
                         </span>
 
                     </div>
-
 
                     <div className="movie-detail-item">
 
@@ -771,19 +1006,20 @@ function MovieDetail() {
 
             </section>
 
-
-            {/* Cast */}
+            {/* =====================================
+                CAST
+            ====================================== */}
 
             {cast.length > 0 && (
-
                 <section className="movie-cast-section">
 
-                    <h2>Cast</h2>
+                    <h2>
+                        Cast
+                    </h2>
 
                     <div className="movie-cast-grid">
 
                         {cast.map((actor) => (
-
                             <div
                                 className="cast-card"
                                 key={actor}
@@ -798,48 +1034,56 @@ function MovieDetail() {
                                 </span>
 
                             </div>
-
                         ))}
 
                     </div>
 
                 </section>
-
             )}
 
-
-            {/* Reviews */}
+            {/* =====================================
+                REVIEWS
+            ====================================== */}
 
             <section className="movie-reviews-section">
 
                 <div className="reviews-heading">
 
-                    <h2>Reviews</h2>
+                    <h2>
+                        Reviews
+                    </h2>
 
                     <button
                         className="add-review-btn"
                         onClick={() => {
 
-                            const loggedInUser =
-                                JSON.parse(
-                                    sessionStorage.getItem("user")
-                                );
+                            const storedUser =
+                                sessionStorage.getItem("user");
 
-                            if (
-                                !loggedInUser ||
-                                !loggedInUser.id
-                            ) {
-
+                            if (!storedUser) {
                                 alert(
                                     "Please sign in first."
                                 );
 
                                 return;
+                            }
 
+                            const loggedInUser =
+                                JSON.parse(storedUser);
+
+                            const userId =
+                                loggedInUser.id ||
+                                loggedInUser._id;
+
+                            if (!userId) {
+                                alert(
+                                    "User ID not found. Please login again."
+                                );
+
+                                return;
                             }
 
                             setShowReviewForm(true);
-
                         }}
                     >
                         + Add a Review
@@ -847,18 +1091,17 @@ function MovieDetail() {
 
                 </div>
 
-
-                {/* Review Form */}
+                {/* REVIEW FORM */}
 
                 {showReviewForm && (
-
                     <form
                         className="review-form"
                         onSubmit={handleSubmitReview}
                     >
 
-                        <h3>Write a Review</h3>
-
+                        <h3>
+                            Write a Review
+                        </h3>
 
                         <div className="review-form-group">
 
@@ -868,29 +1111,30 @@ function MovieDetail() {
 
                             <div className="review-stars">
 
-                                {[1, 2, 3, 4, 5].map((star) => (
-
-                                    <button
-                                        type="button"
-                                        key={star}
-                                        className={
-                                            star <= reviewRating
-                                                ? "review-star selected"
-                                                : "review-star"
-                                        }
-                                        onClick={() =>
-                                            setReviewRating(star)
-                                        }
-                                    >
-                                        ★
-                                    </button>
-
-                                ))}
+                                {[1, 2, 3, 4, 5].map(
+                                    (star) => (
+                                        <button
+                                            type="button"
+                                            key={star}
+                                            className={
+                                                star <= reviewRating
+                                                    ? "review-star selected"
+                                                    : "review-star"
+                                            }
+                                            onClick={() =>
+                                                setReviewRating(
+                                                    star
+                                                )
+                                            }
+                                        >
+                                            ★
+                                        </button>
+                                    )
+                                )}
 
                             </div>
 
                         </div>
-
 
                         <div className="review-form-group">
 
@@ -912,7 +1156,6 @@ function MovieDetail() {
 
                         </div>
 
-
                         <div className="review-form-group">
 
                             <label htmlFor="reviewText">
@@ -933,7 +1176,6 @@ function MovieDetail() {
 
                         </div>
 
-
                         <div className="review-form-actions">
 
                             <button
@@ -951,7 +1193,6 @@ function MovieDetail() {
                                 Cancel
                             </button>
 
-
                             <button
                                 type="submit"
                                 className="review-submit-btn"
@@ -965,14 +1206,11 @@ function MovieDetail() {
                         </div>
 
                     </form>
-
                 )}
 
-
-                {/* Existing Reviews */}
+                {/* EXISTING REVIEWS */}
 
                 {reviews.length === 0 ? (
-
                     <div className="reviews-empty-state">
 
                         <h3>
@@ -984,13 +1222,10 @@ function MovieDetail() {
                         </p>
 
                     </div>
-
                 ) : (
-
                     <div className="movie-reviews-list">
 
                         {reviews.map((review) => (
-
                             <div
                                 className="movie-review-card"
                                 key={review.id}
@@ -1001,23 +1236,18 @@ function MovieDetail() {
                                     <div>
 
                                         <span className="movie-review-user">
-                                            @{review.user.username}
+                                            @{review.user?.username || "user"}
                                         </span>
 
                                         {review.createdAt && (
-
                                             <span className="movie-review-date">
-
                                                 {new Date(
                                                     review.createdAt
                                                 ).toLocaleDateString()}
-
                                             </span>
-
                                         )}
 
                                     </div>
-
 
                                     <span className="movie-review-rating">
                                         ★ {review.rating}
@@ -1025,48 +1255,118 @@ function MovieDetail() {
 
                                 </div>
 
-
                                 {review.reviewTitle && (
-
                                     <h3 className="movie-review-title">
                                         {review.reviewTitle}
                                     </h3>
-
                                 )}
 
-
                                 {review.reviewText && (
-
                                     <p className="movie-review-text">
                                         {review.reviewText}
                                     </p>
-
                                 )}
 
                             </div>
-
                         ))}
 
                     </div>
-
                 )}
 
             </section>
 
+            {/* =====================================
+                ADD TO LIST MODAL
+            ====================================== */}
 
-            {/* Bottom Strip */}
+            {showListModal && (
+                <div className="movie-list-modal-overlay">
+
+                    <div className="movie-list-modal">
+
+                        <div className="movie-list-modal-header">
+
+                            <h2>
+                                Add to List
+                            </h2>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setShowListModal(false)
+                                }
+                            >
+                                ×
+                            </button>
+
+                        </div>
+
+                        {userLists.length === 0 ? (
+                            <div className="movie-list-empty">
+
+                                <p>
+                                    You don't have any lists yet.
+                                </p>
+
+                                <p>
+                                    Create a list from Profile → Lists.
+                                </p>
+
+                            </div>
+                        ) : (
+                            <div className="movie-list-options">
+
+                                {userLists.map((list) => (
+                                    <button
+                                        key={list.id}
+                                        className="movie-list-option"
+                                        onClick={() =>
+                                            handleAddToList(
+                                                list.id
+                                            )
+                                        }
+                                    >
+
+                                        <div>
+
+                                            <h3>
+                                                {list.title}
+                                            </h3>
+
+                                            <p>
+                                                {list.movieCount} films
+                                            </p>
+
+                                        </div>
+
+                                        <span>
+                                            →
+                                        </span>
+
+                                    </button>
+                                ))}
+
+                            </div>
+                        )}
+
+                    </div>
+
+                </div>
+            )}
+
+            {/* =====================================
+                BOTTOM STRIP
+            ====================================== */}
 
             <section className="movie-bottom-strip">
 
-                <div className="movie-bottom-line"></div>
+                <div className="movie-bottom-line">
+                </div>
 
             </section>
 
         </main>
-
     );
-
 }
 
 export default MovieDetail;
-

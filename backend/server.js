@@ -1383,6 +1383,737 @@ app.post("/watchlist", async (req, res) => {
 });
 
 // ==================================================
+// GET USER WATCHLIST
+// ==================================================
+
+app.get("/watchlist/:userId", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId } = req.params;
+
+        // Check user ID
+        if (!userId) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "User ID is required"
+
+            });
+
+        }
+
+        // Get watchlist for this user
+        const watchlist = await db
+            .collection("watchlists")
+            .aggregate([
+
+                // Find watchlist items
+                {
+                    $match: {
+
+                        userId:
+                            new mongoose.Types.ObjectId(userId)
+
+                    }
+
+                },
+
+                // Get movie information
+                {
+                    $lookup: {
+
+                        from: "movie",
+
+                        localField: "movieId",
+
+                        foreignField: "_id",
+
+                        as: "movie"
+
+                    }
+
+                },
+
+                // Convert movie array into object
+                {
+                    $unwind: {
+
+                        path: "$movie",
+
+                        preserveNullAndEmptyArrays: false
+
+                    }
+
+                },
+
+                // Latest added movies first
+                {
+                    $sort: {
+
+                        addedAt: -1
+
+                    }
+
+                }
+
+            ])
+            .toArray();
+
+
+        // Convert MongoDB data into
+        // frontend-friendly format
+
+        const formattedWatchlist =
+            watchlist.map((item) => {
+
+                return {
+
+                    id: item._id.toString(),
+
+                    userId:
+                        item.userId.toString(),
+
+                    movieId:
+                        item.movieId.toString(),
+
+                    addedAt:
+                        item.addedAt,
+
+                    movie: {
+
+                        id:
+                            item.movie._id.toString(),
+
+                        title:
+                            item.movie.Title || "",
+
+                        poster:
+                            item.movie.Poster || "",
+
+                        year:
+                            item.movie.Year || "",
+
+                        genre:
+                            item.movie.Genre || "",
+
+                        rating:
+                            item.movie.Rating || 0
+
+                    }
+
+                };
+
+            });
+
+
+        res.json({
+
+            success: true,
+
+            watchlist:
+                formattedWatchlist
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Watchlist fetch error:",
+            error
+        );
+
+        res.status(500).json({
+
+            success: false,
+
+            message:
+                "Failed to fetch watchlist"
+
+        });
+
+    }
+
+});
+
+// ==========================================
+// REMOVE MOVIE FROM WATCHLIST
+// ==========================================
+
+app.delete("/watchlist/:userId/:movieId", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId, movieId } = req.params;
+
+        if (!userId || !movieId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "userId and movieId are required"
+            });
+
+        }
+
+        const result = await db
+            .collection("watchlists")
+            .deleteOne({
+                userId: new mongoose.Types.ObjectId(userId),
+                movieId: new mongoose.Types.ObjectId(movieId)
+            });
+
+        if (result.deletedCount === 0) {
+
+            return res.status(404).json({
+                success: false,
+                message: "Movie not found in watchlist"
+            });
+
+        }
+
+        res.json({
+            success: true,
+            message: "Movie removed from watchlist"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Remove watchlist error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to remove movie from watchlist"
+        });
+
+    }
+
+});
+
+// ==================================================
+// GET USER LISTS
+// ==================================================
+
+app.get("/userlists/:userId", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const { userId } = req.params;
+
+
+        if (!userId) {
+
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required"
+            });
+
+        }
+
+
+        const lists = await db
+            .collection("userlist")
+            .aggregate([
+
+                // Get only this user's lists
+                {
+                    $match: {
+                        userId:
+                            new mongoose.Types.ObjectId(userId)
+                    }
+                },
+
+
+                // Get movie information
+                {
+                    $lookup: {
+                        from: "movie",
+                        localField: "movieIds",
+                        foreignField: "_id",
+                        as: "movies"
+                    }
+                },
+
+
+                // Latest lists first
+                {
+                    $sort: {
+                        createdAt: -1
+                    }
+                }
+
+            ])
+            .toArray();
+
+
+        const formattedLists = lists.map((list) => {
+
+            return {
+
+                id: list._id.toString(),
+
+                title: list.title || "",
+
+                description:
+                    list.description || "",
+
+                movieCount: list.movieIds
+                    ? list.movieIds.length
+                    : 0,
+
+                likesCount:
+                    list.likesCount || 0,
+
+                isPrivate:
+                    list.isPrivate || false,
+
+                createdAt:
+                    list.createdAt || "",
+
+
+                movies: list.movies.map((movie) => ({
+
+                    id: movie._id.toString(),
+
+                    title: movie.Title || "",
+
+                    poster: movie.Poster || ""
+
+                }))
+
+            };
+
+        });
+
+
+        res.json({
+
+            success: true,
+
+            lists: formattedLists
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "User lists error:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to load user lists"
+
+        });
+
+    }
+
+});
+
+// ==================================================
+// CREATE USER LIST
+// ==================================================
+
+app.post("/userlists", async (req, res) => {
+
+    try {
+
+        const db = mongoose.connection.db;
+
+        const {
+            userId,
+            title,
+            description,
+            isPrivate
+        } = req.body;
+
+
+        // Check required data
+        if (!userId || !title) {
+
+            return res.status(400).json({
+                success: false,
+                message: "User ID and list title are required"
+            });
+
+        }
+
+
+        const newList = {
+
+            userId:
+                new mongoose.Types.ObjectId(userId),
+
+            title:
+                title.trim(),
+
+            description:
+                description
+                    ? description.trim()
+                    : "",
+
+            movieIds: [],
+
+            likesCount: 0,
+
+            isPrivate:
+                isPrivate || false,
+
+            createdAt: new Date(),
+
+            updatedAt: new Date()
+
+        };
+
+
+        const result = await db
+            .collection("userlist")
+            .insertOne(newList);
+
+
+        res.status(201).json({
+
+            success: true,
+
+            message: "List created successfully",
+
+            list: {
+
+                id:
+                    result.insertedId.toString(),
+
+                title:
+                    newList.title,
+
+                description:
+                    newList.description,
+
+                movieCount: 0,
+
+                likesCount: 0,
+
+                isPrivate:
+                    newList.isPrivate,
+
+                movies: []
+
+            }
+
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Create list error:",
+            error
+        );
+
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Failed to create list"
+
+        });
+
+    }
+
+});
+
+// ==================================================
+// REMOVE MOVIE FROM USER LIST
+// ==================================================
+
+app.delete("/userlists/:listId/movies/:movieId", async (req, res) => {
+    try {
+        const db = mongoose.connection.db;
+
+        const { listId, movieId } = req.params;
+        const { userId } = req.body;
+
+        if (!listId || !movieId || !userId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "List ID, movie ID and user ID are required"
+            });
+        }
+
+        const list = await db
+            .collection("userlist")
+            .findOne({
+                _id: new mongoose.Types.ObjectId(listId)
+            });
+
+        if (!list) {
+            return res.status(404).json({
+                success: false,
+                message: "List not found"
+            });
+        }
+
+        if (
+            list.userId.toString() !==
+            userId.toString()
+        ) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "You cannot modify this list"
+            });
+        }
+
+        const result = await db
+            .collection("userlist")
+            .updateOne(
+                {
+                    _id: new mongoose.Types.ObjectId(
+                        listId
+                    )
+                },
+                {
+                    $pull: {
+                        movieIds:
+                            new mongoose.Types.ObjectId(
+                                movieId
+                            )
+                    },
+                    $set: {
+                        updatedAt: new Date()
+                    }
+                }
+            );
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "Movie was not found in this list"
+            });
+        }
+
+        res.json({
+            success: true,
+            message:
+                "Movie removed from list"
+        });
+
+    } catch (error) {
+        console.error(
+            "Remove movie from list error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Failed to remove movie from list"
+        });
+    }
+});
+
+// ==================================================
+// DELETE USER LIST
+// ==================================================
+
+app.delete("/userlists/:listId", async (req, res) => {
+    try {
+        const db = mongoose.connection.db;
+
+        const { listId } = req.params;
+        const { userId } = req.body;
+
+        if (!listId || !userId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "List ID and user ID are required"
+            });
+        }
+
+        const list = await db
+            .collection("userlist")
+            .findOne({
+                _id: new mongoose.Types.ObjectId(
+                    listId
+                )
+            });
+
+        if (!list) {
+            return res.status(404).json({
+                success: false,
+                message: "List not found"
+            });
+        }
+
+        if (
+            list.userId.toString() !==
+            userId.toString()
+        ) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "You cannot delete this list"
+            });
+        }
+
+        const result = await db
+            .collection("userlist")
+            .deleteOne({
+                _id: new mongoose.Types.ObjectId(
+                    listId
+                )
+            });
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "List could not be deleted"
+            });
+        }
+
+        res.json({
+            success: true,
+            message: "List deleted successfully"
+        });
+
+    } catch (error) {
+        console.error(
+            "Delete list error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message:
+                "Failed to delete list"
+        });
+    }
+});
+
+// ==================================================
+// ADD MOVIE TO USER LIST
+// ==================================================
+
+app.post("/userlists/:listId/movies", async (req, res) => {
+    try {
+        const db = mongoose.connection.db;
+
+        const { listId } = req.params;
+        const { movieId, userId } = req.body;
+
+        if (!listId || !movieId || !userId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "List ID, movie ID and user ID are required"
+            });
+        }
+
+        // Find the list
+        const list = await db
+            .collection("userlist")
+            .findOne({
+                _id: new mongoose.Types.ObjectId(listId)
+            });
+
+        if (!list) {
+            return res.status(404).json({
+                success: false,
+                message: "List not found"
+            });
+        }
+
+        // Check list owner
+        if (
+            list.userId.toString() !==
+            userId.toString()
+        ) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "You cannot modify this list"
+            });
+        }
+
+        // Check if movie already exists
+        const alreadyExists =
+            list.movieIds?.some(
+                (movie) =>
+                    movie.toString() ===
+                    movieId.toString()
+            );
+
+        if (alreadyExists) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Movie is already in this list"
+            });
+        }
+
+        // Add movie to list
+        await db
+            .collection("userlist")
+            .updateOne(
+                {
+                    _id: new mongoose.Types.ObjectId(
+                        listId
+                    )
+                },
+                {
+                    $push: {
+                        movieIds:
+                            new mongoose.Types.ObjectId(
+                                movieId
+                            )
+                    },
+
+                    $set: {
+                        updatedAt: new Date()
+                    }
+                }
+            );
+
+        return res.json({
+            success: true,
+            message: "Movie added to list"
+        });
+
+    } catch (error) {
+        console.error(
+            "Add movie to list error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Failed to add movie to list"
+        });
+    }
+});
+
+// ==================================================
 // GET USER WATCHED MOVIES
 // ==================================================
 

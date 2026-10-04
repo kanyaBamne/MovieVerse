@@ -15,6 +15,8 @@ import ProfileReviews from "../components/ProfileReviews";
 
 import ProfileFavorites from "../components/ProfileFavorites";
 
+import ProfileLists from "../components/ProfileLists";
+
 
 function Profile() {
 
@@ -172,6 +174,10 @@ function Profile() {
                     userId={user.id}
                 />
 
+            )}
+
+            {user && activeTab === "Lists" && (
+                <ProfileLists />
             )}
 
         </div>
