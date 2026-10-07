@@ -8,6 +8,8 @@ function Movies() {
     const [search, setSearch] = useState("");
     const [genre, setGenre] = useState("");
     const [year, setYear] = useState("");
+    const [genres, setGenres] = useState([]);
+    const [years, setYears] = useState([]);
     const [movieToDelete, setMovieToDelete] = useState(null);
 
     // Movies from MongoDB
@@ -23,6 +25,48 @@ function Movies() {
     const [totalMovies, setTotalMovies] = useState(0);
 
     const moviesPerPage = 10;
+
+    useEffect(() => {
+
+        const fetchFilterOptions = async () => {
+
+            try {
+
+                const response = await fetch(
+                    "http://localhost:5000/movies/filters"
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        "Failed to load filter options"
+                    );
+                }
+
+                const data =
+                    await response.json();
+
+                setGenres(
+                    data.genres || []
+                );
+
+                setYears(
+                    data.years || []
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Filter options error:",
+                    error
+                );
+
+            }
+
+        };
+
+        fetchFilterOptions();
+
+    }, []);
 
 
     // ==========================================
@@ -89,8 +133,6 @@ function Movies() {
                     data.message || "Failed to delete movie"
                 );
             }
-
-            console.log("Movie deleted:", data);
 
             // Close confirmation modal
             setMovieToDelete(null);
@@ -217,14 +259,18 @@ function Movies() {
                     value={genre}
                     onChange={handleGenreChange}
                 >
-                    <option value="">All Genres</option>
-                    <option value="Action">Action</option>
-                    <option value="Animation">Animation</option>
-                    <option value="Crime">Crime</option>
-                    <option value="Drama">Drama</option>
-                    <option value="Horror">Horror</option>
-                    <option value="Musical">Musical</option>
-                    <option value="Sci-Fi">Sci-Fi</option>
+                    <option value="">
+                        All Genres
+                    </option>
+
+                    {genres.map((genreOption) => (
+                        <option
+                            key={genreOption}
+                            value={genreOption}
+                        >
+                            {genreOption}
+                        </option>
+                    ))}
                 </select>
 
 
@@ -232,9 +278,15 @@ function Movies() {
                     value={year}
                     onChange={handleYearChange}
                 >
-                    <option value="">All Years</option>
-                    {Array.from({ length: 2026 - 1972 + 1 }, (_, i) => 2026 - i).map((yearOption) => (
-                        <option key={yearOption} value={yearOption}>
+                    <option value="">
+                        All Years
+                    </option>
+
+                    {years.map((yearOption) => (
+                        <option
+                            key={yearOption}
+                            value={yearOption}
+                        >
                             {yearOption}
                         </option>
                     ))}

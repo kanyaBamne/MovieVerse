@@ -20,7 +20,7 @@ function TopReviews() {
                     );
 
                     setReviewers(
-                        (data.popularReviewers || []).slice(0, 5)
+                        (data.popularReviewers || []).slice(0, 4)
                     );
                 }
             } catch (error) {
@@ -210,7 +210,7 @@ function TopReviews() {
 
                 <div className="popular-reviewers">
 
-                    <h2>POPULAR REVIEWERS</h2>
+                    <h2>TOP REVIEWERS</h2>
 
                     <div className="popular-reviewers-list">
 

@@ -1,5 +1,4 @@
 import bannerImage from "../assets/banner.jpg";
-import UserNavbar from "../components/UserNavbar";
 import Footer from "../components/Footer";
 
 
@@ -9,7 +8,7 @@ function AboutUs() {
         
         <main className="about-page">
 
-<UserNavbar/>
+
 
             {/* Banner */}
             <section className="about-banner"

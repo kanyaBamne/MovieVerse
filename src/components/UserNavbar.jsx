@@ -1,9 +1,14 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+    Link,
+    useNavigate,
+    useLocation
+} from "react-router-dom";
 
 function UserNavbar() {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [showMenu, setShowMenu] = useState(false);
     const [search, setSearch] = useState("");
@@ -11,6 +16,10 @@ function UserNavbar() {
     const user = JSON.parse(
         sessionStorage.getItem("user")
     );
+
+    const isHomeStylePage =
+        location.pathname === "/" ||
+        location.pathname === "/about";
 
     const handleLogout = () => {
 
@@ -26,7 +35,8 @@ function UserNavbar() {
 
         if (e.key === "Enter") {
 
-            const searchValue = search.trim();
+            const searchValue =
+                search.trim();
 
             if (!searchValue) {
                 return;
@@ -41,9 +51,23 @@ function UserNavbar() {
     };
 
     return (
-        <header className="user-navbar">
+        <header
+            className={
+                `user-navbar ${
+                    isHomeStylePage
+                        ? "user-navbar-home"
+                        : "user-navbar-inner"
+                }`
+            }
+        >
 
-            <Link to="/" className="user-navbar-logo">
+            <Link
+                to="/"
+                className="user-navbar-logo"
+                style={{
+                    fontFamily: '"Times New Roman", Times, serif'
+                }}
+            >
                 MOVIEVERSE
             </Link>
 
@@ -81,7 +105,6 @@ function UserNavbar() {
                 {!user ? (
 
                     <>
-
                         <Link
                             to="/login"
                             className="nav-pill"
@@ -95,7 +118,6 @@ function UserNavbar() {
                         >
                             Join
                         </Link>
-
                     </>
 
                 ) : (

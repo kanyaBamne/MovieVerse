@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import UserNavbar from "../components/UserNavbar";
 import "../UserHome.css";
+import PageNavigation from "../components/PageNavigation";
 
 function Register() {
     const navigate = useNavigate();
@@ -64,7 +64,7 @@ function Register() {
     return (
         <div className="register-page">
 
-            <UserNavbar />
+            <PageNavigation to="/" />
 
             <main className="register-main">
 

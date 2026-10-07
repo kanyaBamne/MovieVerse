@@ -5,7 +5,7 @@ function ProfileHeader() {
         <div className="profile-header">
 
             <div className="profile-logo">
-                MOVIEVERSE!
+                {/* MOVIEVERSE! */}
             </div>
 
         </div>

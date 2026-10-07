@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import ProfileHeader from "./ProfileHeader";
 
@@ -19,7 +20,23 @@ function Profile() {
 
     const [error, setError] = useState("");
 
-    const [activeTab, setActiveTab] = useState("Films");
+    const [searchParams] = useSearchParams();
+
+        const validTabs = [
+            "Films",
+            "Favourites",
+            "Reviews",
+            "Watchlist",
+            "Lists"
+        ];
+
+        const requestedTab = searchParams.get("tab");
+
+        const [activeTab, setActiveTab] = useState(
+            validTabs.includes(requestedTab)
+                ? requestedTab
+                : "Films"
+        );
 
 
     useEffect(() => {
@@ -120,7 +137,6 @@ function Profile() {
             <ProfileTabs
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
-                onTabChange={setActiveTab}
             />
 
 

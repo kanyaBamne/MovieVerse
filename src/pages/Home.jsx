@@ -1,7 +1,7 @@
 import LatestReviews from "./LatestReviews";
 import TopLists from "./TopLists";
 
-import UserNavbar from "../components/UserNavbar";
+
 import Hero from "../components/Hero";
 import TrendingThisWeek from "../components/TrendingThisWeek";
 import TopReviews from "./TopReviews";
@@ -16,7 +16,6 @@ function Home() {
 
             <section className="hero-wrapper">
 
-                <UserNavbar />
 
                 <Hero />
 

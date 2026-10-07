@@ -67,8 +67,6 @@ function AddMovie() {
             );
         }
 
-        console.log("Movie added:", data);
-
         navigate("/admin/movies");
 
     } catch (error) {

@@ -51,10 +51,6 @@ function ProfileWatchlist() {
                 return;
             }
 
-            console.log(
-                "Fetching watchlist for user:",
-                userId
-            );
 
             const response = await fetch(
                 `http://localhost:5000/watchlist/${userId}`
@@ -63,10 +59,6 @@ function ProfileWatchlist() {
             const data =
                 await response.json();
 
-            console.log(
-                "Watchlist data:",
-                data
-            );
 
             if (!response.ok) {
 

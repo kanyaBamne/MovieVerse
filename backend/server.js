@@ -54,13 +54,6 @@ app.use(express.json());
 
   app.use("/uploads", express.static(uploadDir));
 
-// --------------------------------------------------
-// Middleware
-// --------------------------------------------------
-
-app.use(cors());
-app.use(express.json());
-
 
 // --------------------------------------------------
 // MongoDB Connection
@@ -92,86 +85,433 @@ app.get("/", (req, res) => {
 // ==================================================
 
 app.get("/dashboard", async (req, res) => {
-  try {
-    const db = mongoose.connection.db;
+    try {
 
-    // Total movies
-    const totalMovies = await db.collection("movie").countDocuments();
+        const db = mongoose.connection.db;
 
-    // Total users
-    const totalUsers = await db.collection("user").countDocuments();
 
-    // Total reviews
-    const totalReviews = await db.collection("reviews").countDocuments();
+        // ==========================================
+        // TOTAL MOVIES
+        // ==========================================
 
-    // Average movie rating
-    const ratingResult = await db
-      .collection("movie")
-      .aggregate([
-        {
-          $group: {
-            _id: null,
-            averageRating: {
-              $avg: "$Rating",
-            },
-          },
-        },
-      ])
-      .toArray();
+        const totalMovies = await db
+            .collection("movie")
+            .countDocuments();
 
-    const averageRating =
-      ratingResult.length > 0
-        ? Number(ratingResult[0].averageRating.toFixed(1))
-        : 0;
 
-    // Recent movies
-    const recentMoviesData = await db
-      .collection("movie")
-      .find({})
-      .sort({ Year: -1 })
-      .limit(5)
-      .toArray();
+        // ==========================================
+        // TOTAL USERS
+        // ==========================================
 
-    const recentMovies = recentMoviesData.map((movie) => ({
-      id: movie._id.toString(),
-      title: movie.Title || "",
-      genre: movie.Genre || "",
-      year: movie.Year || "",
-      rating: movie.Rating || 0,
-      poster: movie.Poster || "",
-    }));
+        const totalUsers = await db
+            .collection("user")
+            .countDocuments();
 
-    // Recent users
-    const recentUsersData = await db
-      .collection("user")
-      .find({})
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .toArray();
 
-    const recentUsers = recentUsersData.map((user) => ({
-      id: user._id.toString(),
-      username: user.username || "",
-      joined: user.createdAt || "",
-      profileImage: user.profileImage || "",
-    }));
+        // ==========================================
+        // TOTAL VALID REVIEWS
+        // Only reviews whose movie still exists
+        // ==========================================
 
-    res.json({
-      totalMovies,
-      totalUsers,
-      averageRating,
-      totalReviews,
-      recentMovies,
-      recentUsers,
-      recentActivity: [],
-    });
-  } catch (error) {
-    console.error("Dashboard error:", error);
+        const totalReviewsResult = await db
+            .collection("reviews")
+            .aggregate([
+                {
+                    $lookup: {
+                        from: "movie",
+                        localField: "movieId",
+                        foreignField: "_id",
+                        as: "movie"
+                    }
+                },
+                {
+                    $unwind: "$movie"
+                },
+                {
+                    $count: "total"
+                }
+            ])
+            .toArray();
 
-    res.status(500).json({
-      message: "Failed to load dashboard data",
-    });
-  }
+        const totalReviews =
+            totalReviewsResult.length > 0
+                ? totalReviewsResult[0].total
+                : 0;
+
+
+        // ==========================================
+        // AVERAGE MOVIE RATING
+        // ==========================================
+
+        const ratingResult = await db
+            .collection("movie")
+            .aggregate([
+                {
+                    $match: {
+                        Rating: {
+                            $exists: true,
+                            $ne: null
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: null,
+                        averageRating: {
+                            $avg: "$Rating"
+                        }
+                    }
+                }
+            ])
+            .toArray();
+
+        const averageRating =
+            ratingResult.length > 0
+                ? Number(
+                    ratingResult[0]
+                        .averageRating
+                        .toFixed(1)
+                )
+                : 0;
+
+
+        // ==========================================
+        // RECENT MOVIES
+        //
+        // Movie documents do not have createdAt,
+        // so newest MongoDB ObjectIds are used as
+        // the closest available indication of
+        // recently added records.
+        // ==========================================
+
+        const recentMoviesData = await db
+            .collection("movie")
+            .find({})
+            .sort({
+                _id: -1
+            })
+            .limit(5)
+            .toArray();
+
+        const recentMovies =
+            recentMoviesData.map((movie) => ({
+                id: movie._id.toString(),
+                title: movie.Title || "",
+                genre: movie.Genre || "",
+                year: movie.Year || "",
+                rating: movie.Rating || 0,
+                poster: movie.Poster || ""
+            }));
+
+
+        // ==========================================
+        // RECENT USERS
+        // ==========================================
+
+        const recentUsersData = await db
+            .collection("user")
+            .find({})
+            .sort({
+                createdAt: -1
+            })
+            .limit(5)
+            .toArray();
+
+        const recentUsers =
+            recentUsersData.map((user) => ({
+                id: user._id.toString(),
+                username: user.username || "",
+                joined: user.createdAt || "",
+                profileImage: user.profileImage || ""
+            }));
+
+
+        // ==========================================
+        // RECENT ACTIVITY
+        // ==========================================
+
+        const activity = [];
+
+
+        // ------------------------------------------
+        // RECENT USERS
+        // ------------------------------------------
+
+        const activityUsers = await db
+            .collection("user")
+            .find({
+                createdAt: {
+                    $exists: true,
+                    $ne: null
+                }
+            })
+            .sort({
+                createdAt: -1
+            })
+            .limit(5)
+            .toArray();
+
+        activityUsers.forEach((user) => {
+
+            activity.push({
+                id:
+                    `user-${user._id.toString()}`,
+
+                type: "user",
+
+                text:
+                    `${user.username || user.name || "A user"} joined MovieVerse`,
+
+                createdAt:
+                    new Date(user.createdAt)
+            });
+
+        });
+
+
+        // ------------------------------------------
+        // RECENT REVIEWS
+        //
+        // IMPORTANT:
+        // $unwind without preserveNullAndEmptyArrays
+        // removes reviews whose movie was deleted.
+        // ------------------------------------------
+
+        const activityReviews = await db
+            .collection("reviews")
+            .aggregate([
+
+                {
+                    $sort: {
+                        createdAt: -1
+                    }
+                },
+
+                {
+                    $limit: 5
+                },
+
+                {
+                    $lookup: {
+                        from: "user",
+                        localField: "userId",
+                        foreignField: "_id",
+                        as: "user"
+                    }
+                },
+
+                {
+                    $unwind: {
+                        path: "$user",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+
+                {
+                    $lookup: {
+                        from: "movie",
+                        localField: "movieId",
+                        foreignField: "_id",
+                        as: "movie"
+                    }
+                },
+
+                {
+                    $unwind: "$movie"
+                }
+
+            ])
+            .toArray();
+
+
+        activityReviews.forEach((review) => {
+
+            const username =
+                review.user?.username ||
+                review.user?.name ||
+                "A user";
+
+            const movieTitle =
+                review.movie?.Title ||
+                "a movie";
+
+            activity.push({
+                id:
+                    `review-${review._id.toString()}`,
+
+                type: "review",
+
+                text:
+                    `${username} reviewed ${movieTitle}`,
+
+                createdAt:
+                    review.createdAt
+                        ? new Date(review.createdAt)
+                        : new Date(0)
+            });
+
+        });
+
+
+        // ------------------------------------------
+        // RECENT MOVIES ACTIVITY
+        // ------------------------------------------
+
+        const activityMovies = await db
+            .collection("movie")
+            .find({})
+            .sort({
+                _id: -1
+            })
+            .limit(5)
+            .toArray();
+
+
+        activityMovies.forEach((movie) => {
+
+            let createdAt = new Date(0);
+
+            if (
+                movie._id &&
+                typeof movie._id.getTimestamp === "function"
+            ) {
+                createdAt =
+                    movie._id.getTimestamp();
+            }
+
+            activity.push({
+                id:
+                    `movie-${movie._id.toString()}`,
+
+                type: "movie",
+
+                text:
+                    `Movie "${movie.Title || "Untitled"}" is in the catalogue`,
+
+                createdAt
+            });
+
+        });
+
+
+        // ==========================================
+        // SORT ACTIVITY
+        // ==========================================
+
+        activity.sort(
+            (a, b) =>
+                b.createdAt.getTime() -
+                a.createdAt.getTime()
+        );
+
+
+        // ==========================================
+        // KEEP LATEST 8
+        // ==========================================
+
+        const recentActivity =
+            activity
+                .slice(0, 8)
+                .map((item) => {
+
+                    const now =
+                        Date.now();
+
+                    const activityTime =
+                        item.createdAt.getTime();
+
+                    const difference =
+                        Math.max(
+                            0,
+                            now - activityTime
+                        );
+
+                    const minutes =
+                        Math.floor(
+                            difference /
+                            (1000 * 60)
+                        );
+
+                    const hours =
+                        Math.floor(
+                            minutes / 60
+                        );
+
+                    const days =
+                        Math.floor(
+                            hours / 24
+                        );
+
+                    let time = "Just now";
+
+
+                    if (days > 0) {
+
+                        time =
+                            `${days} ${
+                                days === 1
+                                    ? "day"
+                                    : "days"
+                            } ago`;
+
+                    } else if (hours > 0) {
+
+                        time =
+                            `${hours} ${
+                                hours === 1
+                                    ? "hour"
+                                    : "hours"
+                            } ago`;
+
+                    } else if (minutes > 0) {
+
+                        time =
+                            `${minutes} ${
+                                minutes === 1
+                                    ? "minute"
+                                    : "minutes"
+                            } ago`;
+
+                    }
+
+
+                    return {
+                        id: item.id,
+                        type: item.type,
+                        text: item.text,
+                        time
+                    };
+
+                });
+
+
+        // ==========================================
+        // FINAL RESPONSE
+        // ==========================================
+
+        res.json({
+            totalMovies,
+            totalUsers,
+            averageRating,
+            totalReviews,
+            recentMovies,
+            recentUsers,
+            recentActivity
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Dashboard error:",
+            error
+        );
+
+        res.status(500).json({
+            message:
+                "Failed to load dashboard data"
+        });
+
+    }
 });
 
 
@@ -293,6 +633,102 @@ app.get("/movies", async (req, res) => {
   }
 });
 
+// ==================================================
+// MOVIE FILTER OPTIONS
+// ==================================================
+
+app.get("/movies/filters", async (req, res) => {
+    try {
+
+        const db = mongoose.connection.db;
+
+        // Get all genres
+        const genreDocuments = await db
+            .collection("movie")
+            .find(
+                {
+                    Genre: {
+                        $exists: true,
+                        $ne: ""
+                    }
+                },
+                {
+                    projection: {
+                        Genre: 1
+                    }
+                }
+            )
+            .toArray();
+
+
+        const genres = [
+            ...new Set(
+                genreDocuments.flatMap((movie) =>
+                    movie.Genre
+                        ? movie.Genre
+                            .split(",")
+                            .map((genre) =>
+                                genre.trim()
+                            )
+                            .filter(Boolean)
+                        : []
+                )
+            )
+        ].sort();
+
+
+        // Get all years
+        const yearDocuments = await db
+            .collection("movie")
+            .find(
+                {
+                    Year: {
+                        $exists: true,
+                        $ne: null
+                    }
+                },
+                {
+                    projection: {
+                        Year: 1
+                    }
+                }
+            )
+            .toArray();
+
+
+        const years = [
+            ...new Set(
+                yearDocuments
+                    .map((movie) =>
+                        Number(movie.Year)
+                    )
+                    .filter((year) =>
+                        Number.isFinite(year)
+                    )
+            )
+        ].sort((a, b) => b - a);
+
+
+        res.json({
+            genres,
+            years
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Movie filter options error:",
+            error
+        );
+
+        res.status(500).json({
+            message:
+                "Failed to load movie filter options"
+        });
+
+    }
+});
+
 
 // ==================================================
 // ADD MOVIE
@@ -313,7 +749,6 @@ app.post("/movies", upload.single("poster"), async (req, res) => {
       director,
       cast,
       description,
-      poster,
       metascore,
       votes,
     } = req.body;
@@ -454,83 +889,192 @@ app.get("/movies/:id", async (req, res) => {
 // UPDATE MOVIE
 // ==================================================
 
-app.put("/movies/:id", async (req, res) => {
-  try {
-    const db = mongoose.connection.db;
+app.put(
+  "/movies/:id",
+  upload.single("poster"),
+  async (req, res) => {
 
-    const { id } = req.params;
+    try {
 
-    const {
-      title,
-      year,
-      certificate,
-      duration,
-      genre,
-      rating,
-      director,
-      cast,
-      description,
-    } = req.body;
+      const db = mongoose.connection.db;
 
-    // Basic validation
-    if (!title || !year || !genre || !director) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Title, year, genre and director are required.",
-      });
-    }
+      const { id } = req.params;
 
-    const updatedMovie = {
-      Title: title,
-      Year: Number(year),
-      Certificate: certificate || "",
-      "Duration (min)": duration !== "" && duration !== undefined
-        ? Number(duration)
-        : 0,
-      Genre: genre,
-      Rating: rating !== "" && rating !== undefined
-        ? Number(rating)
-        : 0,
-      Director: director,
-      Cast: cast || "",
-      Description: description || "",
-    };
+      const {
+        title,
+        year,
+        certificate,
+        duration,
+        genre,
+        rating,
+        director,
+        cast,
+        description,
+      } = req.body;
 
-    const result = await db.collection("movie").updateOne(
-      {
-        _id: new mongoose.Types.ObjectId(id),
-      },
-      {
-        $set: updatedMovie,
+
+      // Basic validation
+
+      if (
+        !title ||
+        !year ||
+        !genre ||
+        !director
+      ) {
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Title, year, genre and director are required.",
+        });
+
       }
-    );
 
-    if (result.matchedCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Movie not found",
+
+      // Find existing movie
+
+      const existingMovie =
+        await db
+          .collection("movie")
+          .findOne({
+            _id:
+              new mongoose.Types.ObjectId(id),
+          });
+
+
+      if (!existingMovie) {
+
+        return res.status(404).json({
+          success: false,
+          message: "Movie not found",
+        });
+
+      }
+
+
+      // Keep existing poster unless
+      // a new poster was uploaded
+
+      const poster =
+        req.file
+          ? `http://localhost:5000/uploads/${req.file.filename}`
+          : existingMovie.Poster || "";
+
+
+      const updatedMovie = {
+
+        Poster: poster,
+
+        Title: title,
+
+        Year: Number(year),
+
+        Certificate:
+          certificate || "",
+
+        "Duration (min)":
+          duration !== "" &&
+          duration !== undefined
+            ? Number(duration)
+            : 0,
+
+        Genre: genre,
+
+        Rating:
+          rating !== "" &&
+          rating !== undefined
+            ? Number(rating)
+            : 0,
+
+        Director: director,
+
+        Cast: cast || "",
+
+        Description:
+          description || "",
+
+        Metascore:
+          existingMovie.Metascore || 0,
+
+        Votes:
+          existingMovie.Votes || "",
+
+        "Review Count":
+          existingMovie["Review Count"] || 0,
+
+        "Review Title":
+          existingMovie["Review Title"] || "",
+
+        Review:
+          existingMovie.Review || "",
+
+      };
+
+
+      const result =
+        await db
+          .collection("movie")
+          .updateOne(
+            {
+              _id:
+                new mongoose.Types.ObjectId(id),
+            },
+            {
+              $set: updatedMovie,
+            }
+          );
+
+
+      if (result.matchedCount === 0) {
+
+        return res.status(404).json({
+          success: false,
+          message: "Movie not found",
+        });
+
+      }
+
+
+      res.json({
+
+        success: true,
+
+        message:
+          "Movie updated successfully",
+
+        movie: {
+
+          id,
+
+          ...updatedMovie,
+
+        },
+
       });
+
+    } catch (error) {
+
+      console.error(
+        "Update movie error:",
+        error
+      );
+
+      res.status(500).json({
+
+        success: false,
+
+        message:
+          "Failed to update movie",
+
+        error:
+          error.message,
+
+      });
+
     }
 
-    res.json({
-      success: true,
-      message: "Movie updated successfully",
-      movie: {
-        id,
-        ...updatedMovie,
-      },
-    });
-  } catch (error) {
-    console.error("Update movie error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to update movie",
-      error: error.message,
-    });
   }
-});
+);
 
 // ==================================================
 // DELETE MOVIE
@@ -822,7 +1366,6 @@ app.get("/reviews/user/:userId", async (req, res) => {
 
         const { userId } = req.params;
 
-
         const reviews = await db
             .collection("reviews")
             .aggregate([
@@ -845,12 +1388,9 @@ app.get("/reviews/user/:userId", async (req, res) => {
                     }
                 },
 
-                // Convert movie array into object
+                // Keep only reviews whose movie still exists
                 {
-                    $unwind: {
-                        path: "$movie",
-                        preserveNullAndEmptyArrays: true
-                    }
+                    $unwind: "$movie"
                 },
 
                 // Latest reviews first
@@ -924,7 +1464,6 @@ app.get("/reviews/user/:userId", async (req, res) => {
             error
         );
 
-
         res.status(500).json({
 
             success: false,
@@ -942,8 +1481,6 @@ app.get("/reviews/user/:userId", async (req, res) => {
 // ==================================================
 
 app.post("/reviews", async (req, res) => {
-
- console.log("POST /reviews HIT");
 
     try {
 
@@ -2479,8 +3016,6 @@ app.post("/watchedMovies", async (req, res) => {
 
 app.delete("/watchedMovies", async (req, res) => {
 
-    console.log("DELETE /watchedMovies HIT");
-
     try {
 
         const db = mongoose.connection.db;
@@ -2789,18 +3324,7 @@ app.post("/login", async (req, res) => {
     try {
         const db = mongoose.connection.db;
 
-        console.log("DATABASE NAME:", mongoose.connection.name);
-
-        const userCount = await db.collection("user").countDocuments();
-
-        console.log("USER COUNT:", userCount);
-
         const { email, password } = req.body;
-
-        console.log("========== LOGIN DEBUG ==========");
-        console.log("EMAIL RECEIVED =", JSON.stringify(email));
-        console.log("PASSWORD RECEIVED =", JSON.stringify(password));
-        console.log("=================================");
 
         if (!email || !password) {
             return res.status(400).json({
@@ -2857,19 +3381,6 @@ app.post("/login", async (req, res) => {
             email: email,
         });
 
-        const allUsers = await db
-            .collection("user")
-            .find({})
-            .project({ email: 1, username: 1 })
-            .toArray();
-
-        console.log("ALL USERS:", allUsers);
-
-        console.log("USER FOUND:", user ? user.email : "NO USER FOUND");
-                console.log(
-                    "USER FOUND:",
-                    user ? user.email : "NO USER FOUND"
-                );
 
         if (user) {
 
@@ -2879,8 +3390,6 @@ app.post("/login", async (req, res) => {
                 password,
                 user.password
             );
-
-             console.log("PASSWORD MATCH:", passwordMatch);
 
               if (!passwordMatch) {
                   return res.status(401).json({

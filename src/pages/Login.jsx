@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PageNavigation from "../components/PageNavigation";
+
 
 function Login() {
     const navigate = useNavigate();
@@ -32,9 +34,6 @@ function Login() {
                 return;
             }
 
-            console.log("Login successful:", data.user);
-            console.log("Profile image:", data.user.profileImage);
-
             // Save logged-in user/admin information
             sessionStorage.setItem(
                 "user",
@@ -65,6 +64,11 @@ function Login() {
     };
 
     return (
+
+        <>
+
+        <PageNavigation to="/" />
+
         <div className="login-page">
 
             <div className="login-card">
@@ -128,9 +132,25 @@ function Login() {
 
                 </form>
 
+                <div className="login-register-link">
+                    <span>
+                        Don't have an account?
+                    </span>
+
+                    <button
+                        type="button"
+                        onClick={() => navigate("/register")}
+                    >
+                        Join MovieVerse
+                    </button>
+                </div>
+
             </div>
 
         </div>
+
+        </>
+
     );
 }
 

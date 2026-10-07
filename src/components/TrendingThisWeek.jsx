@@ -7,6 +7,75 @@ function TrendingThisWeek() {
 
     const [trendingMovies, setTrendingMovies] = useState([]);
 
+    const handleWatchlist = async (movie) => {
+        try {
+            const storedUser = sessionStorage.getItem("user");
+
+            if (!storedUser) {
+                alert("Please sign in first.");
+                return;
+            }
+
+            const loggedInUser = JSON.parse(storedUser);
+
+            const userId = loggedInUser.id || loggedInUser._id;
+
+            if (!userId) {
+                alert("User ID not found. Please login again.");
+                return;
+            }
+
+            const movieId = movie.id || movie._id;
+
+            if (!movieId) {
+                alert("Movie ID not found.");
+                return;
+            }
+
+            const response = await fetch(
+                "http://localhost:5000/watchlist",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        userId,
+                        movieId,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (
+                !response.ok &&
+                data.message === "Movie is already in watchlist"
+            ) {
+                alert("Movie is already in your watchlist.");
+                return;
+            }
+
+            if (!response.ok) {
+                alert(
+                    data.message ||
+                    "Failed to add movie to watchlist."
+                );
+                return;
+            }
+
+            alert("Movie added to your watchlist!");
+
+        } catch (error) {
+            console.error("Watchlist error:", error);
+
+            alert(
+                error.message ||
+                "Failed to add movie to your watchlist."
+            );
+        }
+    };
+
 
     useEffect(() => {
 
@@ -15,7 +84,7 @@ function TrendingThisWeek() {
             try {
 
                 const response = await fetch(
-                    "http://localhost:5000/movies?page=1&limit=100"
+                    "http://localhost:5000/movies?page=1&limit=8000"
                 );
 
                 const data = await response.json();
@@ -25,22 +94,17 @@ function TrendingThisWeek() {
                     : data.movies || data.data || [];
 
 
-                // Shuffle all movies
-                const shuffledMovies = [...movies].sort(
-                    () => Math.random() - 0.5
-                );
-
-
-                // Select 12 movies
-                const selectedMovies = shuffledMovies
-                    .filter((movie) => movie.poster)
-                    .slice(0, 12)
-                    .map((movie) => ({
-                        ...movie,
-                        posterUrl: movie.poster.startsWith("http")
-                            ? movie.poster
-                            : `http://localhost:5000${movie.poster}`
-                    }));
+                // Select the highest-rated movies
+            const selectedMovies = [...movies]
+                .filter((movie) => movie.poster)
+                .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                .slice(0, 12)
+                .map((movie) => ({
+                    ...movie,
+                    posterUrl: movie.poster.startsWith("http")
+                        ? movie.poster
+                        : `http://localhost:5000${movie.poster}`
+                }));
 
 
                 setTrendingMovies(selectedMovies);
@@ -90,7 +154,6 @@ function TrendingThisWeek() {
                             style={{
                                 cursor: "pointer",
                                 position: "relative",
-                                zIndex: 10
                             }}
                         />
 
@@ -105,16 +168,19 @@ function TrendingThisWeek() {
                                 {movie.genre || "Movie"}
                             </p>
 
-                            {movie.Year && (
+                            {movie.year && (
                                 <span>
-                                    {movie.Year}
+                                    {movie.year}
                                 </span>
                             )}
 
                         </div>
 
 
-                        <button className="trending-watchlist">
+                        <button
+                            className="trending-watchlist"
+                            onClick={() => handleWatchlist(movie)}
+                        >
                             + Add to Watchlist
                         </button>
 

@@ -26,8 +26,6 @@ function MovieRoulette() {
                 return res.json();
             })
             .then((data) => {
-                console.log(data);
-
                 const movieData = data.movies || [];
 
                 setMovies(movieData);

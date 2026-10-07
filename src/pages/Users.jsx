@@ -8,6 +8,9 @@ function Users() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const usersPerPage = 10;
+
     useEffect(() => {
         const fetchUsers = async () => {
             try {
@@ -53,26 +56,55 @@ function Users() {
         );
     });
 
-    // Convert database field names into readable names
-    const formatFieldName = (key) => {
-        return key
-            .replace(/([A-Z])/g, " $1")
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (char) => char.toUpperCase());
-    };
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filteredUsers.length / usersPerPage)
+    );
 
-    // Format values for displaying
-    const formatValue = (value) => {
-        if (value === null || value === undefined || value === "") {
-            return "-";
+    const startIndex = (currentPage - 1) * usersPerPage;
+
+    const paginatedUsers = filteredUsers.slice(
+        startIndex,
+        startIndex + usersPerPage
+    );
+
+    const handlePageChange = (page) => {
+        if (page < 1 || page > totalPages) {
+            return;
         }
 
-        if (typeof value === "object") {
-            return JSON.stringify(value, null, 2);
+        setCurrentPage(page);
+    };
+
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisiblePages = 5;
+
+        let startPage = Math.max(
+            1,
+            currentPage - Math.floor(maxVisiblePages / 2)
+        );
+
+        let endPage = Math.min(
+            totalPages,
+            startPage + maxVisiblePages - 1
+        );
+
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(
+                1,
+                endPage - maxVisiblePages + 1
+            );
         }
 
-        return String(value);
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(i);
+        }
+
+        return pages;
     };
+
+
 
     return (
         <div className="users-page">
@@ -96,7 +128,10 @@ function Users() {
                         type="text"
                         placeholder="Search by username or email..."
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setCurrentPage(1);
+                        }}
                     />
                 </div>
 
@@ -156,7 +191,7 @@ function Users() {
 
                             ) : filteredUsers.length > 0 ? (
 
-                                filteredUsers.map((user) => (
+                                paginatedUsers.map((user) => (
 
                                     <tr key={user.id}>
 
@@ -269,24 +304,52 @@ function Users() {
                 <div className="pagination">
 
                     <span>
-                        Showing {filteredUsers.length > 0 ? 1 : 0}–
-                        {filteredUsers.length} of {users.length} users
+                        {filteredUsers.length > 0
+                            ? `Showing ${startIndex + 1}–${Math.min(
+                                startIndex + usersPerPage,
+                                filteredUsers.length
+                            )} of ${filteredUsers.length} users`
+                            : "Showing 0 users"}
                     </span>
 
                     <div className="pagination-buttons">
 
-                        <button>←</button>
-
-                        <button className="active-page">
-                            1
+                        {/* Previous */}
+                        <button
+                            onClick={() =>
+                                handlePageChange(currentPage - 1)
+                            }
+                            disabled={currentPage === 1}
+                        >
+                            ←
                         </button>
 
-                        <button>2</button>
-                        <button>3</button>
-                        <button>4</button>
-                        <button>5</button>
+                        {/* Page Numbers */}
+                        {getPageNumbers().map((page) => (
+                            <button
+                                key={page}
+                                className={
+                                    currentPage === page
+                                        ? "active-page"
+                                        : ""
+                                }
+                                onClick={() =>
+                                    handlePageChange(page)
+                                }
+                            >
+                                {page}
+                            </button>
+                        ))}
 
-                        <button>→</button>
+                        {/* Next */}
+                        <button
+                            onClick={() =>
+                                handlePageChange(currentPage + 1)
+                            }
+                            disabled={currentPage === totalPages}
+                        >
+                            →
+                        </button>
 
                     </div>
 
@@ -332,8 +395,15 @@ function Users() {
 
                                 {selectedUser.profileImage ? (
                                     <img
-                                        src={selectedUser.profileImage}
-                                        alt={selectedUser.name}
+                                        src={
+                                            selectedUser.profileImage.startsWith("http")
+                                                ? selectedUser.profileImage
+                                                : `http://localhost:5000${selectedUser.profileImage}`
+                                        }
+                                        alt={selectedUser.name || selectedUser.username}
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = "none";
+                                        }}
                                     />
                                 ) : (
                                     "👤"
@@ -403,7 +473,7 @@ function Users() {
                                     </strong>
                                 </div>
 
-                                
+
 
                             </div>
 

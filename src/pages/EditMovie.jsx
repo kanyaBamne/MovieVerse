@@ -21,6 +21,7 @@ function EditMovie() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [posterFile, setPosterFile] = useState(null);
 
   // ==========================================
   // LOAD MOVIE
@@ -83,24 +84,27 @@ function EditMovie() {
       setSaving(true);
       setError("");
 
+      const formData = new FormData();
+
+      formData.append("title", movie.title);
+      formData.append("year", movie.year);
+      formData.append("certificate", movie.certificate);
+      formData.append("duration", movie.duration);
+      formData.append("genre", movie.genre);
+      formData.append("rating", movie.rating);
+      formData.append("director", movie.director);
+      formData.append("cast", movie.cast);
+      formData.append("description", movie.description);
+
+      if (posterFile) {
+        formData.append("poster", posterFile);
+      }
+
       const response = await fetch(
         `http://localhost:5000/movies/${id}`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            title: movie.title,
-            year: movie.year,
-            certificate: movie.certificate,
-            duration: movie.duration,
-            genre: movie.genre,
-            rating: movie.rating,
-            director: movie.director,
-            cast: movie.cast,
-            description: movie.description,
-          }),
+          body: formData,
         }
       );
 
@@ -112,18 +116,24 @@ function EditMovie() {
         );
       }
 
-      console.log("Movie updated:", data);
-
       navigate("/admin/movies");
+
     } catch (error) {
-      console.error("Update movie error:", error);
+
+      console.error(
+        "Update movie error:",
+        error
+      );
 
       setError(
         error.message ||
           "Something went wrong while updating the movie."
       );
+
     } finally {
+
       setSaving(false);
+
     }
   };
 
@@ -197,14 +207,39 @@ function EditMovie() {
             <div className="poster-upload">
 
               <div className="poster-placeholder">
-                <span>🎬</span>
-                <strong>Movie Poster</strong>
-                <small>Change poster</small>
+
+                {movie.poster ? (
+                  <img
+                    src={
+                      movie.poster.startsWith("http")
+                        ? movie.poster
+                        : `http://localhost:5000${movie.poster}`
+                    }
+                    alt={movie.title}
+                  />
+                ) : (
+                  <>
+                    <span>🎬</span>
+                    <strong>Movie Poster</strong>
+                  </>
+                )}
+
+                <small>
+                  {posterFile
+                    ? posterFile.name
+                    : "Change poster"}
+                </small>
+
               </div>
 
               <input
                 type="file"
                 accept="image/png, image/jpeg"
+                onChange={(e) => {
+                  setPosterFile(
+                    e.target.files[0] || null
+                  );
+                }}
               />
 
             </div>
